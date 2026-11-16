@@ -15,6 +15,7 @@ services:
       - pika_data:/data
     environment:
       - ADMIN_EMAIL=admin@example.com
+      # - ADMIN_PASSWORD=?             # ⚠️ 设置该值，库中无用户时启动自动创建管理员
       - JWT_ISSUER=pika
       - JWT_SECRET=your_jwt_secret # ⚠️ 修改 your_jwt_secret
     logging: # 限制日志体量，避免长期运行吃满宿主机磁盘

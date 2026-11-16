@@ -22,7 +22,7 @@ bun run dev
 - Server：http://localhost:9528
 - OpenAPI 文档：http://localhost:9528/api/openapi
 
-本地默认使用 PGlite，数据落在 `.tmp/`，无需额外安装数据库。需要自定义配置时，将 `apps/server/.env.example` 复制为 `apps/server/.env.local` 后修改。
+需要自定义配置时，将 `apps/server/.env.example` 复制为 `apps/server/.env.local` 后修改。
 
 ## 提交前检查
 

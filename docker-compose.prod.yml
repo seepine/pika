@@ -18,6 +18,7 @@ services:
       - pika_server_data:/data
     environment:
       - ADMIN_EMAIL=admin@example.com
+      # - ADMIN_PASSWORD=?         # ⚠️ 设置该值，库中无用户时启动自动创建管理员
       - JWT_ISSUER=pika
       - JWT_SECRET=your_jwt_secret # ⚠️ 修改 your_jwt_secret
       - CACHE_URL=redis://:your_rds_pwd@pika-redis:6379/0 # ⚠️ 修改 your_rds_pwd

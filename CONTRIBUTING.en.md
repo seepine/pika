@@ -22,7 +22,7 @@ bun run dev
 - Server: http://localhost:9528
 - OpenAPI docs: http://localhost:9528/api/openapi
 
-Local development uses PGlite by default and stores data in `.tmp/`, so no separate database is needed. For custom configuration, copy `apps/server/.env.example` to `apps/server/.env.local` and edit it.
+For custom configuration, copy `apps/server/.env.example` to `apps/server/.env.local` and edit it.
 
 ## Checks before committing
 

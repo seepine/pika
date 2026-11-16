@@ -55,10 +55,11 @@ const uploadFile = async (file: File, accessToken?: string) => {
 }
 
 const getAccessToken = async (): Promise<string> => {
+  // 管理员账号由 .env.test 的 ADMIN_EMAIL / ADMIN_PASSWORD 在启动 hook 中自动创建
   const { data } = await api.system.oauth.token.post({
     grant_type: 'password',
-    username: 'test',
-    password: 'test',
+    username: Bun.env['ADMIN_EMAIL']!,
+    password: Bun.env['ADMIN_PASSWORD']!,
   })
   expect(data).not.toBeNull()
   return data!.access_token

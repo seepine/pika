@@ -8,7 +8,7 @@ import type { User } from '@/system/schemas/user'
 import { HttpError } from '@pika/elysia-plugins'
 import { isPhone } from '@pika/shared'
 import { hashPassword } from '@/common/utils/crypto'
-import { passwordSchema } from '@/system/utils/validation'
+import { emailSchema, passwordSchema } from '@/system/utils/validation'
 
 // 与注册路径及 `user.name` 的 varchar(50) 容量保持一致，
 // 否则系统创建的短用户名/长用户名账号无法通过管理接口更新其他字段
@@ -46,10 +46,7 @@ export abstract class AdminUserService {
 
   static UpdateBodySchema = z.object({
     name: nameSchema,
-    email: z
-      .email(t('SYSTEM.EMAIL_INVALID'))
-      .max(50, t('SYSTEM.EMAIL_MAX_LENGTH', { max: 50 }))
-      .nullish(),
+    email: emailSchema.nullish(),
     emailVerified: z.boolean(),
     phoneNumber: z.string().min(1).refine(isPhone, t('SYSTEM.PHONE_INVALID')).nullish(),
     phoneNumberVerified: z.boolean(),

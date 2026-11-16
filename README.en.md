@@ -128,7 +128,9 @@ bun run dev
 - Server: http://localhost:9528
 - OpenAPI docs: http://localhost:9528/api/openapi
 
-Local development uses PGlite by default (data is stored in `apps/server/.tmp/`), so no separate database is needed.
+Local development uses an in-memory database and in-memory cache by default; configure `DATABASE_URL` / `CACHE_URL` to persist data.
+
+Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `apps/server/.env.local` to create an admin account on startup when the database has no users; you can also sign up on the web page — in development the email sign-up verification code is printed to the server log.
 
 See `apps/server/.env.example` for more environment variables.
 

@@ -128,7 +128,9 @@ bun run dev
 - Server：http://localhost:9528
 - OpenAPI 文档：http://localhost:9528/api/openapi
 
-本地开发默认使用 PGlite（数据落在 `apps/server/.tmp/`），无需额外安装数据库。
+本地开发默认使用内存数据库与内存缓存；需要持久化可配置 `DATABASE_URL` / `CACHE_URL`。
+
+可在 `apps/server/.env.local` 配置 `ADMIN_EMAIL` 与 `ADMIN_PASSWORD`，库中无用户时启动会自动创建管理员；也可在 Web 注册页注册，开发环境邮箱注册的验证码会打印在 server 日志。
 
 更多环境变量见 `apps/server/.env.example`。
 

@@ -3,6 +3,7 @@
 import { resolve } from 'node:path'
 import { PGlite, type PGliteOptions } from '@electric-sql/pglite'
 
+import { isMemoryUrl } from '@/common/utils/is'
 import { acquireDirLock } from './lock'
 
 import wasmPath from '@electric-sql/pglite/pglite.wasm' with {
@@ -21,12 +22,12 @@ import dataPath from '@electric-sql/pglite/pglite.data' with {
 }
 
 /** 内存 / IndexedDB 文件系统不共享目录，不需要加锁 */
-const isVirtualDataDir = (dataDir: string) =>
-  dataDir.startsWith('memory://') || dataDir.startsWith('idb://')
+const isVirtualDataDir = (dataDir: string) => isMemoryUrl(dataDir) || dataDir.startsWith('idb://')
 
 export async function createPGlite(dataDir: string, options?: PGliteOptions): Promise<PGlite> {
   if (isVirtualDataDir(dataDir)) {
-    return createInstance(dataDir, options)
+    // 手动处理，因为 PGlite 只认 `memory://` 协议串
+    return createInstance(dataDir === 'memory' ? 'memory://' : dataDir, options)
   }
 
   // PGlite 不会自动创建父目录，加锁时会顺带创建

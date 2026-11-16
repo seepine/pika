@@ -18,14 +18,15 @@ docker-compose.prod.yml # 生产环境参考配置
 
 ### 环境变量
 
-| 变量           | 说明                                                                           | 默认 / 示例                                                              |
-| -------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
-| `TZ`           | 时区                                                                           | `Asia/Shanghai`                                                          |
-| `DATABASE_URL` | 数据库连接串。AIO 镜像内置 **PGlite**；独立部署指向 PostgreSQL                 | `/data/pglite.data` 或 `postgresql://pika:<pwd>@pika-postgres:5432/pika` |
-| `JWT_ISSUER`   | JWT 签发者                                                                     | `pika`                                                                   |
-| `JWT_SECRET`   | JWT 签名密钥（**必填**）                                                       | `openssl rand -hex 32` 生成                                              |
-| `ADMIN_EMAIL`  | 管理员邮箱，与登录用户邮箱完全匹配时授予管理员权限                             | `admin@example.com`                                                      |
-| `CACHE_URL`    | 支持 `redis://`、`valkey://` 等；`memory` 走内存缓存；其他值视为文件缓存目录； | `redis://:<rds_pwd>@pika-redis:6379/0` 或 `/data/cache`                  |
+| 变量             | 说明                                                                           | 默认 / 示例                                                              |
+| ---------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| `TZ`             | 时区                                                                           | `Asia/Shanghai`                                                          |
+| `DATABASE_URL`   | 数据库连接串。AIO 镜像内置 **PGlite**；独立部署指向 PostgreSQL                 | `/data/pglite.data` 或 `postgresql://pika:<pwd>@pika-postgres:5432/pika` |
+| `JWT_ISSUER`     | JWT 签发者                                                                     | `pika`                                                                   |
+| `JWT_SECRET`     | JWT 签名密钥（**必填**）                                                       | `openssl rand -hex 32` 生成                                              |
+| `ADMIN_EMAIL`    | 管理员邮箱，与登录用户邮箱一致（忽略大小写）时授予管理员权限                   | `admin@example.com`                                                      |
+| `ADMIN_PASSWORD` | 管理员初始密码，与 `ADMIN_EMAIL` 同时配置时，库中无用户则自动创建              | 未配置则不自动建号                                                       |
+| `CACHE_URL`      | 支持 `redis://`、`valkey://` 等；`memory` 走内存缓存；其他值视为文件缓存目录； | `redis://:<rds_pwd>@pika-redis:6379/0` 或 `/data/cache`                  |
 
 > 更多环境变量请查看 `apps/server/.env.example` 文件，此处不再赘述
 

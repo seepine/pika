@@ -6,7 +6,7 @@ import type { PGlite } from '@electric-sql/pglite'
 import { config } from '@/common/config'
 import { log } from '@/common/log'
 import { embedPath } from '@/common/utils/embed-assets'
-import { isPostgresUrl } from '@/common/utils/is-postgres-url'
+import { isPostgresUrl } from '@/common/utils/is'
 import { createPGlite } from '@/common/db/plugins/pglite'
 import type { MigrationConfig } from 'drizzle-orm/migrator'
 

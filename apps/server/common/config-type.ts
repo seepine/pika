@@ -40,9 +40,14 @@ declare module 'bun' {
     CORS_ORIGINS?: string
 
     /**
-     * 管理员邮箱，与登录用户邮箱完全匹配时授予 admin 角色
+     * 管理员邮箱
      */
     ADMIN_EMAIL?: string
+    /**
+     * 管理员初始密码
+     * 与 `ADMIN_EMAIL` 同时配置时，库中无用户则自动创建该账号
+     */
+    ADMIN_PASSWORD?: string
 
     /**
      * JWT 签发者
@@ -66,9 +71,9 @@ declare module 'bun' {
     /**
      * 缓存连接串
      * - redis:// / rediss:// / valkey:// / valkeys:// 等连接串使用 Redis（valkey 与 redis 互通）
-     * - memory 使用内存缓存
+     * - memory / memory:// 使用内存缓存
      * - 其他值视为文件缓存目录
-     * - 未配置或留空时使用默认文件缓存目录（开发 .tmp/.cache，生产 ~/.pika/data/.cache）
+     * - 未配置或留空时使用默认目录：开发 memory，生产 ~/.pika/data/.cache
      * @example redis://localhost:6379/0
      * @example .cache
      * @example memory
@@ -79,8 +84,9 @@ declare module 'bun' {
      * 数据库连接串
      * - postgresql:// 使用 PostgreSQL
      * - 其他值视为 PGlite 数据目录
-     *   - memory://        内存
-     *   - ./pglite.data    文件
+     *   - memory / memory:// 内存（开发默认）
+     *   - ./pglite.data      文件
+     * - 未配置或留空时使用默认目录：开发 memory，生产 ~/.pika/data/.pglite.data
      * @example postgresql://user:password@localhost:5432/dbname
      * @example .tmp/.pglite.data
      */
@@ -172,21 +178,23 @@ interface ConfigBase {
    * 数据库连接字符串
    * - postgresql:// 使用 PostgreSQL
    * - 其他值视为 PGlite 数据目录
-   *   - memory://        内存
-   *   - ./pglite.data    文件
+   *   - memory / memory:// 内存（开发默认）
+   *   - ./pglite.data      文件
+   * - 未配置或留空时使用默认目录：开发 memory，生产 ~/.pika/data/.pglite.data
    * @example postgresql://user:password@localhost:5432/dbname
    * @example .tmp/.pglite.data
+   * @example memory
    */
   databaseUrl: string
 
   /**
    * 缓存连接串
    * - redis:// / rediss:// / valkey:// / valkeys:// 等连接串使用 Redis（valkey 与 redis 互通）
-   * - memory 使用内存缓存
+   * - memory / memory:// 使用内存缓存
    * - 其他值视为文件缓存目录
-   * - 未配置或留空时使用默认文件缓存目录（开发 .tmp/.cache，生产 ~/.pika/data/.cache）
+   * - 未配置或留空时使用默认目录：开发 memory，生产 ~/.pika/data/.cache
    * @example redis://localhost:6379/0
-   * @example .cache
+   * @example .tmp/.cache
    * @example memory
    */
   cacheUrl: string

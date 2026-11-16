@@ -4,15 +4,13 @@ import { UserRepository } from '@/system/repositories/user'
 import { UserLoginLogRepository } from '@/system/repositories/user-login-log'
 import { loginFailReasons } from '@/system/schemas/user-login-log'
 import { ConfigService } from '@/system/services/config'
-import { config as appConfig } from '@/common/config'
-import { DEV_TEST_USER, isDevTestUser } from '@/common/utils/dev-user'
 import { t } from '@/common/plugins/i18n'
 import type { JwtPayload } from '@/common/plugins/auth'
 import { cache } from '@/common/cache'
 import { CaptchaService } from './captcha'
 import { EmailService } from './email'
 import { SmsService } from './sms'
-import { passwordSchema } from '@/system/utils/validation'
+import { emailSchema, passwordSchema } from '@/system/utils/validation'
 import { HttpError } from '@pika/elysia-plugins'
 import { zodDayjs } from '@/common/zod'
 import { isEmail, isPhone, validateEmail } from '@pika/shared'
@@ -80,7 +78,7 @@ export abstract class AuthService {
 
   static OAuthTokenEmailCodeSchema = z.object({
     grant_type: z.literal('email_code'),
-    email: z.email(t('SYSTEM.EMAIL_INVALID')),
+    email: emailSchema,
     code: z.string().min(1, t('SYSTEM.VERIFICATION_CODE_REQUIRED')),
     scope: z.string().optional(),
   })
@@ -121,20 +119,19 @@ export abstract class AuthService {
       throw new HttpError(t('SYSTEM.USER_AGENT_REQUIRED'), 400)
     }
 
-    await assertLoginAllowed(ip, body.username)
+    // 与其他登录路径保持一致：邮箱去空格并转小写，手机号仅去空格
+    const inputUsername = body.username.trim()
+    const usernameIsEmail = isEmail(inputUsername)
+    const username = usernameIsEmail ? inputUsername.toLowerCase() : inputUsername
 
-    if (appConfig.mode === 'development' && body.username === 'test' && body.password === 'test') {
-      return DEV_TEST_USER
-    }
-
-    const usernameIsEmail = isEmail(body.username)
+    await assertLoginAllowed(ip, username)
 
     const user = usernameIsEmail
-      ? await UserRepository.findByEmail(body.username)
-      : await UserRepository.findByPhone(body.username)
+      ? await UserRepository.findByEmail(username)
+      : await UserRepository.findByPhone(username)
     if (!user) {
       await UserLoginLogRepository.save({
-        username: body.username,
+        username,
         ip,
         userAgent,
         loginType: 'password',
@@ -148,7 +145,7 @@ export abstract class AuthService {
       user.password !== null && (await verifyPassword(body.password, user.password))
     if (!isPasswordValid) {
       await UserLoginLogRepository.save({
-        username: body.username,
+        username,
         userId: user.id,
         ip,
         userAgent,
@@ -161,7 +158,7 @@ export abstract class AuthService {
     }
 
     return finishLogin(user, {
-      username: body.username,
+      username,
       ip,
       userAgent,
       loginType: 'password',
@@ -264,9 +261,6 @@ export abstract class AuthService {
     if (!user || user.rfh !== true) {
       throw new HttpError(t('SYSTEM.INVALID_TOKEN'), 401)
     }
-    if (isDevTestUser(user)) {
-      return DEV_TEST_USER
-    }
 
     const currentUser = await UserRepository.findById(user.sub)
     if (!currentUser) {
@@ -278,7 +272,7 @@ export abstract class AuthService {
   static SendCodeSchema = z.discriminatedUnion('channel', [
     z.object({
       channel: z.literal('email'),
-      email: z.email(t('SYSTEM.EMAIL_INVALID')),
+      email: emailSchema,
       uniqueId: z.string().min(1, t('SYSTEM.UNIQUE_ID_REQUIRED')),
     }),
     z.object({
@@ -355,7 +349,7 @@ export abstract class AuthService {
   }
 
   static RegisterEmailSchema = z.object({
-    email: z.email(t('SYSTEM.EMAIL_INVALID')),
+    email: emailSchema,
     password: passwordSchema,
     code: z.string().min(1, t('SYSTEM.VERIFICATION_CODE_REQUIRED')),
   })
@@ -401,7 +395,7 @@ export abstract class AuthService {
   static ForgetPasswordSchema = z.discriminatedUnion('channel', [
     z.object({
       channel: z.literal('email'),
-      email: z.email(t('SYSTEM.EMAIL_INVALID')),
+      email: emailSchema,
       password: passwordSchema,
       code: z.string().min(1, t('SYSTEM.VERIFICATION_CODE_REQUIRED')),
     }),

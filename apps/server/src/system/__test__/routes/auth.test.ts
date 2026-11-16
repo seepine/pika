@@ -220,6 +220,20 @@ describe('登录与 Token', () => {
     expect(userinfo?.name).toBe('code-login')
   })
 
+  test('密码登录对邮箱大小写与首尾空格做归一化', async () => {
+    const { data: tokenInfo, status } = await api.system.oauth.token.post({
+      grant_type: 'password',
+      username: `  ${email.toUpperCase()}  `,
+      password,
+    })
+    expect(status).toBe(200)
+
+    const { data: userinfo } = await api.system.oauth.userinfo.get({
+      headers: { Authorization: `Bearer ${tokenInfo!.access_token}` },
+    })
+    expect(userinfo?.sub).toBe(userId)
+  })
+
   test('Refresh Token 只能通过 /oauth/token 的 POST Body 使用', async () => {
     const { data: tokenInfo } = await api.system.oauth.token.post({
       grant_type: 'password',

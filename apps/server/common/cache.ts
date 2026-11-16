@@ -2,15 +2,19 @@ import { Cache } from '@seepine/cache'
 import { BunRedisAdapter } from '@seepine/cache/adapt/bun'
 import { FileAdapter } from '@seepine/cache/adapt/file'
 import { config } from './config'
-import { isRedisUrl } from './utils/is-redis-url'
+import { isMemoryUrl, isRedisUrl } from './utils/is'
 import { resolvePath } from './utils/path'
 
-// CACHE_URL 为 memory 时走内存缓存，为 redis/valkey 连接串时走 Redis，其他值视为文件缓存目录
+// CACHE_URL 为空或 memory / memory:// 时走内存缓存，为 redis/valkey 连接串时走 Redis，其他值视为文件缓存目录
 const createAdapter = () => {
-  if (config.cacheUrl === 'memory' || config.cacheUrl === '') return undefined
-  return isRedisUrl(config.cacheUrl)
-    ? new BunRedisAdapter(config.cacheUrl)
-    : new FileAdapter(resolvePath(config.cacheUrl))
+  const { cacheUrl } = config
+  if (!cacheUrl || isMemoryUrl(cacheUrl)) {
+    return undefined
+  }
+  if (isRedisUrl(cacheUrl)) {
+    return new BunRedisAdapter(cacheUrl)
+  }
+  return new FileAdapter(resolvePath(cacheUrl))
 }
 
 export const cache = new Cache({ adapter: createAdapter() })

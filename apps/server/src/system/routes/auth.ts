@@ -4,7 +4,6 @@ import { HttpError, requestIpPlugin, type JwtPayload } from '@pika/elysia-plugin
 import { t } from '@/common/plugins/i18n'
 import { cache } from '@/common/cache'
 import { config } from '@/common/config'
-import { DEV_TEST_USER, isDevTestUser } from '@/common/utils/dev-user'
 import { rateLimit } from '@/common/rate-limit'
 import { AuthService } from '@/system/services/auth'
 import { UserRepository } from '@/system/repositories/user'
@@ -115,16 +114,6 @@ export const authRouter = new Elysia({
       }),
     },
     async ({ user }) => {
-      if (isDevTestUser(user)) {
-        return {
-          sub: user.sub,
-          name: user.name,
-          email: DEV_TEST_USER.email,
-          picture: `${config.basePath}/system/file/avatar/${md5(DEV_TEST_USER.email)}.png`,
-          roles: await getRoles(user),
-        }
-      }
-
       const userInfo = await cache.getOrSet(
         user.sub,
         () => UserRepository.findById(user.sub),

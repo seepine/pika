@@ -44,6 +44,20 @@ export abstract class UserRepository {
     return { items, total: Number(countRow?.count ?? 0) }
   }
 
+  /**
+   * 是否有用户
+   * @returns bool
+   */
+  static async hasUser() {
+    const [row] = await useDb()
+      .select({
+        id: user.id,
+      })
+      .from(user)
+      .limit(1)
+    return row !== undefined
+  }
+
   static async findById(id: string) {
     const [row] = await useDb().select().from(user).where(eq(user.id, id)).limit(1)
     return row

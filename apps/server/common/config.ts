@@ -34,8 +34,8 @@ const defaultConfig = {
   logPath: '',
   requestIdleTimeout: 120,
   requestMaxBodySize: 256 * 1024 * 1024,
-  databaseUrl: mode === 'development' ? '.tmp/.pglite.data' : joinHomePath('data', '.pglite.data'),
-  cacheUrl: mode === 'development' ? '.tmp/.cache' : joinHomePath('data', '.cache'),
+  databaseUrl: mode === 'development' ? 'memory' : joinHomePath('data', '.pglite.data'),
+  cacheUrl: mode === 'development' ? 'memory' : joinHomePath('data', '.cache'),
   filePath: mode === 'development' ? '.tmp/.file' : joinHomePath('data', '.file'),
   jwt: {
     issuer: 'pika',

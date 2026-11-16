@@ -1,7 +1,6 @@
 import { config } from '@/common/config'
 import { clusterRun } from '@/common/utils/cluster'
-import { isPostgresUrl } from '@/common/utils/is-postgres-url'
-import { isRedisUrl } from '@/common/utils/is-redis-url'
+import { isPostgresUrl, isRedisUrl } from '@/common/utils/is'
 
 // PGlite 为嵌入式数据库，多进程启动会带来迁移与写入竞争
 const isPostgres = isPostgresUrl(config.databaseUrl)

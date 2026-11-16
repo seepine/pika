@@ -35,6 +35,7 @@ Before deploying to production, make sure that:
 
 - `JWT_SECRET` is set to a random value (`openssl rand -hex 32`)
 - `ADMIN_EMAIL` points to your own email so admin rights do not fall into someone else's account
+- `ADMIN_PASSWORD` should be a strong password; it is only used to create the admin account when the database has no users, and can be removed afterwards
 - `CORS_ORIGINS` is restricted to your actual domains instead of allowing all origins in production
 - Database and Redis use strong passwords and are not exposed to the public internet
 - The database and uploaded file directory are backed up regularly

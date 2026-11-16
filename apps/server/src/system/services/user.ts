@@ -5,7 +5,7 @@ import { UserRepository } from '@/system/repositories/user'
 import { EmailService } from '@/system/services/email'
 import { SmsService } from '@/system/services/sms'
 import { isNickname, isPhone, validateEmail } from '@pika/shared'
-import { optionalPasswordSchema } from '@/system/utils/validation'
+import { createEmailSchema, emailSchema, optionalPasswordSchema } from '@/system/utils/validation'
 import { HttpError } from '@pika/elysia-plugins'
 import { hashPassword, verifyPassword } from '@/common/utils/crypto'
 
@@ -79,8 +79,8 @@ export abstract class UserService {
 
   static EditEmailBodySchema = z.object({
     // 账号未绑定邮箱时无需提供旧邮箱与旧验证码
-    oldEmail: z.email(t('SYSTEM.OLD_EMAIL_INVALID')).optional(),
-    newEmail: z.email(t('SYSTEM.NEW_EMAIL_INVALID')),
+    oldEmail: createEmailSchema(t('SYSTEM.OLD_EMAIL_INVALID')).optional(),
+    newEmail: createEmailSchema(t('SYSTEM.NEW_EMAIL_INVALID')),
     oldCode: verificationCodeField(
       t('SYSTEM.OLD_EMAIL_VERIFICATION_CODE_LENGTH_INVALID', { min: 4, max: 8 }),
     ).optional(),
@@ -232,7 +232,7 @@ export abstract class UserService {
   }
 
   static CheckEmailBodySchema = z.object({
-    email: z.email(t('SYSTEM.EMAIL_INVALID')),
+    email: emailSchema,
   })
 
   static CheckEmailRespSchema = z.object({ available: z.boolean() })

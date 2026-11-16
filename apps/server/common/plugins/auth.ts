@@ -1,6 +1,5 @@
 import { type JwtPayload, type JwtPluginOpts, jwtAuthPlugin, jwtPlugin } from '@pika/elysia-plugins'
 import { UserRepository } from '@/system/repositories/user'
-import { DEV_TEST_USER, isDevTestUser } from '@/common/utils/dev-user'
 import { t } from './i18n'
 import { config } from '@/common/config'
 
@@ -30,11 +29,10 @@ type AuthPathOpts = Partial<Pick<JwtPluginOpts, 'basePath' | 'includePaths' | 'e
  * 每次请求实时查询用户表，保证邮箱变更后权限立即失效。
  */
 export const getRoles = async (user: JwtPayload): Promise<string[]> => {
-  const email = isDevTestUser(user)
-    ? DEV_TEST_USER.email
-    : (await UserRepository.findById(user.sub))?.email
+  const email = (await UserRepository.findById(user.sub))?.email
+  const adminEmail = process.env['ADMIN_EMAIL']?.trim().toLowerCase()
 
-  if (email && email === process.env['ADMIN_EMAIL']) {
+  if (email && email.toLowerCase() === adminEmail) {
     return ['admin']
   }
   return []

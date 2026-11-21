@@ -13,6 +13,7 @@
     "tooManyRequests": "请求过于频繁，请稍后再试"
   },
   "pageTitle": {
+    "console": "控制台",
     "setting": "设置",
     "profile": "个人信息",
     "security": "登录与安全",

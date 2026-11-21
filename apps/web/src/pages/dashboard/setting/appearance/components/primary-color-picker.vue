@@ -30,7 +30,7 @@ const items = computed(() => {
 </script>
 <style lang="scss" scoped>
 .primary-color-picker {
-  @apply flex flex-row flex-wrap gap-1;
+  @apply flex flex-row flex-wrap gap-1 justify-end;
 
   &__item {
     @apply flex flex-col items-center gap-1 rounded-lg bg-transparent p-1 cursor-pointer;

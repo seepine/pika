@@ -13,6 +13,7 @@
     "tooManyRequests": "Too many requests, please try again later"
   },
   "pageTitle": {
+    "console": "Dashboard",
     "setting": "Setting",
     "profile": "Profile",
     "security": "Login & security",

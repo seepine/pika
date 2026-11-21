@@ -1,4 +1,5 @@
 <template>
+  <!-- 一般用于 classic 布局的头部，定义在全局组件，方便页面直接使用 -->
   <div class="h-[54px] shrink-0 px-4 flex flex-row justify-between items-center">
     <!-- 左侧 min-w-0 让 flex item 能收缩到比内容小，title wrapper 加 flex-1+min-w-0 占满 left 剩余空间 -->
     <div class="flex flex-row gap-2 items-center min-w-0">

@@ -1,8 +1,10 @@
 <template>
   <!-- 内容区：占据 header 之外的剩余高度并独立滚动 -->
-  <div class="g-layout-content flex-1 min-h-0 overflow-y-auto" :class="{ 'pt-2': padded }">
-    <div :class="{ 'mx-auto max-w-3xl': constrained }">
-      <slot></slot>
+  <div class="g-layout-content flex-1 min-h-0" :class="{ 'py-2': padded }">
+    <div class="overflow-y-auto h-full px-2">
+      <div :class="{ 'mx-auto max-w-3xl': constrained }">
+        <slot></slot>
+      </div>
     </div>
   </div>
 </template>

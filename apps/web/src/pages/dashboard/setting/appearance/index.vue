@@ -4,22 +4,19 @@
     <g-layout-header></g-layout-header>
 
     <g-layout-content>
-      <div class="flex flex-col gap-2">
-        <n-card content-class="py-2!">
-          <np-cell-group bordered :options="themeOptions"></np-cell-group>
-        </n-card>
-        <div class="setting-appearance__title">{{ t('lightStyle') }}</div>
-        <n-card content-class="py-2!">
-          <np-cell-group bordered :options="lightOptions"></np-cell-group>
-        </n-card>
-        <div class="setting-appearance__title">{{ t('darkStyle') }}</div>
-        <n-card content-class="py-2!">
-          <np-cell-group bordered :options="darkOptions"></np-cell-group>
-        </n-card>
-        <div class="setting-appearance__title">{{ t('preview') }}</div>
-        <n-card content-class="py-4!">
-          <appearance-preview :theme-style="preferenceStore.themeStyle" />
-        </n-card>
+      <div class="flex flex-col gap-4">
+        <c-cell-card :options="themeOptions"></c-cell-card>
+
+        <c-cell-card :title="t('lightStyle')" :options="lightOptions"></c-cell-card>
+
+        <c-cell-card :title="t('darkStyle')" :options="darkOptions"></c-cell-card>
+
+        <div>
+          <div class="px-2 pb-2 color-text-2 text-xs select-none">{{ t('preview') }}</div>
+          <n-card content-class="py-2!">
+            <appearance-preview :theme-style="preferenceStore.themeStyle" />
+          </n-card>
+        </div>
       </div>
     </g-layout-content>
   </div>
@@ -78,7 +75,7 @@ const renderSlider = (
   format: (value: number) => string,
   onChange: (value: number) => void,
 ) => (
-  <div class="flex flex-row items-center gap-3">
+  <div class="flex flex-row items-center gap-2">
     <NSlider class="w-36" value={value} {...props} onUpdateValue={onChange} />
     <span class="w-10 text-right color-text-2 text-xs">{format(value)}</span>
   </div>
@@ -167,28 +164,6 @@ const styleOptions = (mode: 'light' | 'dark'): NpCellGroupOption[] => {
 const lightOptions = computed<NpCellGroupOption[]>(() => styleOptions('light'))
 const darkOptions = computed<NpCellGroupOption[]>(() => styleOptions('dark'))
 </script>
-<style lang="scss" scoped>
-.setting-appearance {
-  &__title {
-    @apply px-2 color-text-2 text-xs select-none pt-4;
-  }
-
-  // 右侧控件保持固定宽度，空间不足时优先压缩左侧文案
-  :deep(.np-cell__left) {
-    flex: 1;
-    min-width: 0;
-  }
-
-  :deep(.np-cell__right) {
-    flex-shrink: 0;
-  }
-
-  // 行高不一致（如主题缩略图、背景选择）时，label 与右侧内容顶部对齐
-  :deep(.np-cell__wrapper) {
-    align-items: flex-start;
-  }
-}
-</style>
 
 <i18n lang="yaml">
 zh:

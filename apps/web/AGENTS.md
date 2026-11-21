@@ -73,7 +73,7 @@ bun run build        # 构建
 
 ## 布局
 
-- 提供 `dashboard` layout，以供管理页面后台使用
+- 提供 `classic` layout，以供管理页面后台使用
   - 提供 `c-layout-header` 用于自定义 header 部位
 - 提供 `liquid-glass` layout，以供普通用户页面使用
   - 提供 `g-layout-header` 和 `g-layout-content` 组合，方便页面自定义 header 部位，使用示例可参考 `pages/dashboard/setting/appearance/index.vue` 页面

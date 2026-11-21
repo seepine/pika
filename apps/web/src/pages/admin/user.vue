@@ -111,7 +111,6 @@ const resetOption = computed<FormOption<ResetForm>>(() => ({
 }))
 
 const tableOption = computed<TableOption<UserItem>>(() => ({
-  props: { scrollX: 980 },
   search: {
     placeholder: t('searchPlaceholder'),
     width: locale.value === 'zh' ? 240 : 280,

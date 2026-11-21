@@ -39,7 +39,7 @@ const items = computed<{ value: ThemeMode; label: string }[]>(() => [
 </script>
 <style lang="scss" scoped>
 .theme-preview {
-  @apply flex flex-row gap-2;
+  @apply flex flex-row justify-end flex-wrap gap-2;
 
   &__item {
     @apply flex flex-col items-center gap-1 rounded-lg bg-transparent p-1 cursor-pointer;

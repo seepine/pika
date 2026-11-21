@@ -1,8 +1,6 @@
 <template>
   <div class="setting-language">
-    <n-card content-class="py-2!">
-      <np-cell-group bordered :options="options"></np-cell-group>
-    </n-card>
+    <c-cell-card :options="options"></c-cell-card>
   </div>
 </template>
 <script setup lang="tsx">

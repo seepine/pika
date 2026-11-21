@@ -1,19 +1,19 @@
 <template>
-  <div class="layout-liquid-glass h-full w-full" :style="wallpaperStyle">
-    <!-- 宽屏：左右分栏（菜单 + 内容） -->
+  <div ref="layoutRef" class="layout-liquid-glass h-full w-full" :style="wallpaperStyle">
+    <!-- 菜单 + 内容：宽屏左右分栏，窄屏时左栏收起、菜单改从抽屉弹出 -->
     <w-split
-      v-if="isWide"
       :default-size="`${systemInfo.xxl ? 300 : systemInfo.xl ? 280 : 260}px`"
       min-size="180px"
       max-size="460px"
       :resize-trigger-size="4"
       style="--n-resize-trigger-color: transparent; --n-resize-trigger-color-hover: transparent"
       resize-trigger-class="py-6"
-      :collapsed="collapsed"
+      :collapsed="!isWide || collapsed"
       collapse-pane="1"
     >
       <template #1>
-        <div class="py-2 pl-2 w-full h-full">
+        <!-- 窄屏时不渲染左栏内容，菜单只由抽屉渲染，避免 left-area 出现两份实例 -->
+        <div v-if="isWide" class="py-2 pl-2 w-full h-full">
           <div class="glass-card w-full h-full flex flex-col">
             <left-area></left-area>
           </div>
@@ -21,7 +21,7 @@
       </template>
 
       <template #2>
-        <div class="h-full flex flex-col p-2">
+        <div class="h-full flex flex-col">
           <!-- 页面接管 header（hideHeader）时只渲染路由，header 与内容区由页面自行组合 -->
           <layout-view v-if="hideHeader" />
           <template v-else>
@@ -34,66 +34,69 @@
       </template>
     </w-split>
 
-    <!-- 窄屏：菜单页与内容页互斥，点击菜单项后直接进入对应页面 -->
-    <template v-else>
-      <div
-        v-if="menuVisible"
-        class="glass-card rounded-none! border-0! w-full h-full flex flex-col"
-      >
-        <div class="w-full flex-1 min-h-0 overflow-y-auto">
-          <left-area></left-area>
-        </div>
+    <!-- 窄屏：菜单从左侧抽屉弹出。抽屉默认 teleport 到 body，会脱离 .layout-liquid-glass 
+              导致 .glass-card 样式与玻璃配色变量全部失效，故用 to 挂载到布局内（面板本身透明，玻璃效果由 .glass-card 提供） -->
+    <n-drawer
+      v-if="!isWide"
+      :to="layoutRef ?? undefined"
+      style="
+        --n-body-padding: 0;
+        --n-color: transparent;
+        --n-box-shadow: none;
+        min-width: 220px;
+        max-width: 80vw;
+      "
+      :show="drawerShow"
+      width="280px"
+      :auto-focus="false"
+      placement="left"
+      content-class="h-full p-2"
+      @update:show="handleDrawerShowUpdate"
+    >
+      <div class="glass-card w-full h-full flex flex-col">
+        <left-area></left-area>
       </div>
-      <div v-else class="h-full flex flex-col p-2">
-        <layout-view v-if="hideHeader" />
-        <template v-else>
-          <g-layout-header></g-layout-header>
-          <g-layout-content>
-            <layout-view />
-          </g-layout-content>
-        </template>
-      </div>
-    </template>
+    </n-drawer>
   </div>
 </template>
 <script setup lang="ts">
 import LeftArea from './components/liquid-glass/left/index.vue'
 import LayoutView from './components/liquid-glass/view.vue'
 import { systemInfo } from '@/composables/system.ts'
+import { useLayoutCollapsed } from '@/composables/use-layout-collapsed'
+import { isHomeUrl } from '@/router/util'
 
 const themeStore = useThemeStore()
 const preferenceStore = usePreferenceStore()
 const route = useRoute()
+const layoutRef = useTemplateRef<HTMLElement>('layoutRef')
 const hideHeader = computed(() => route.meta.hideHeader === true)
-// 玻璃层配色在整个 dashboard 布局内均生效；壁纸只在首页渲染，避免内容页被背景干扰
+// 玻璃层配色在整个布局内生效；壁纸只在首页渲染，避免内容页被背景干扰
 const wallpaperStyle = computed(() => {
   const mode = themeStore.isDark ? 'dark' : 'light'
   const style = preferenceStore.themeStyle[mode]
-  let backgroundUrl = resolveBackgroundUrl(style, mode)
-  if (route.path !== '/dashboard') {
-    backgroundUrl = ''
-  }
+  const backgroundUrl = isHomeUrl(route.path) ? resolveBackgroundUrl(style, mode) : ''
   return {
     backgroundColor: backgroundUrl ? undefined : solidBackgrounds[mode],
     '--glass-surface': `rgba(${style.sidebarBgColor} / ${style.sidebarBgTransparency})`,
-    // 纯色背景时不渲染壁纸层
     '--wallpaper-url': backgroundUrl ? `url(${backgroundUrl})` : 'none',
     '--wallpaper-blur': `${style.mainBgBlur}px`,
   }
 })
 
-const collapsed = ref(!systemInfo.value.md)
-provide('c-layout-collapsed', collapsed)
+const { collapsed, drawerShow, handleDrawerShowUpdate } = useLayoutCollapsed()
 
 const isWide = computed(() => systemInfo.value.md)
-// 窄屏下菜单页与内容页互斥：仅 /dashboard 展示菜单，其余页面直接展示目标内容
-// 由当前路径直接派生，保证窗口跨过断点时也按最新路径重算，不会停在无导航入口的内容页
-const menuVisible = computed(() => route.path === '/dashboard')
 
-// 窗口跨过断点时复位，避免残留折叠态
-watch(isWide, (wide) => {
-  collapsed.value = !wide
-})
+// 窄屏下切换页面后自动收起抽屉
+watch(
+  () => route.path,
+  () => {
+    if (!isWide.value) {
+      collapsed.value = true
+    }
+  },
+)
 </script>
 
 <style lang="scss">

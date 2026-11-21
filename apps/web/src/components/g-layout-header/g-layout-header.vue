@@ -1,5 +1,6 @@
 <template>
-  <div class="g-layout-header h-[50px] shrink-0 flex flex-row items-center">
+  <!-- 一般用于liquid-glass布局的头部，定义在全局组件，方便页面直接使用 -->
+  <div class="g-layout-header h-[50px] shrink-0 flex flex-row items-center p-2 pb-0 box-content">
     <!-- 左右两侧均为 flex-1 + basis-0 + min-w-0：basis 相同则分配到的剩余空间相同，从而永远等宽 -->
     <div class="flex-1 basis-0 min-w-0 flex flex-row gap-2 items-center">
       <!-- shrink-0 保证按钮组自身不被压缩 -->
@@ -11,11 +12,11 @@
           <!-- 外层容器常驻，仅过渡宽度与边距，避免按钮出现/消失时布局瞬变 -->
           <div
             class="collapse-toggle shrink-0 overflow-hidden"
-            :class="showToggle ? 'w-9' : 'w-0 -ml-1'"
+            :class="showToggle ? 'w-10 md:w-9' : 'w-0 -ml-1'"
             :aria-hidden="!showToggle"
           >
             <div
-              v-if="systemInfo.md"
+              v-if="systemInfo.md || isHome"
               class="glass-card icon-button"
               :class="showToggle ? 'opacity-100' : 'opacity-0'"
               @click="handleCollapsed"
@@ -49,7 +50,7 @@
 import { throttle } from 'es-toolkit'
 import { resolveTitle } from '@/utils/i18n-title'
 import { systemInfo } from '@/composables/system'
-import { hasBackRoute } from '@/router'
+import { hasBackRoute, homeUrls, isHomeUrl } from '@/router/util'
 
 const props = withDefaults(
   defineProps<{
@@ -62,8 +63,11 @@ const props = withDefaults(
 )
 
 const collapsed = inject('c-layout-collapsed', ref(false))
-// 仅桌面端（左侧栏可折叠时）展示展开/收起按钮
-const showToggle = computed(() => collapsed.value && systemInfo.value.md)
+const route = useRoute()
+// 窄屏下仅首页展示菜单入口（打开左侧抽屉），其他页面只保留返回按钮
+const isHome = computed(() => isHomeUrl(route.path))
+// 桌面端（左侧栏可折叠时）或窄屏首页展示展开/收起按钮
+const showToggle = computed(() => collapsed.value && (systemInfo.value.md || isHome.value))
 const handleCollapsed = throttle(
   () => {
     collapsed.value = !collapsed.value
@@ -72,7 +76,6 @@ const handleCollapsed = throttle(
   { edges: ['leading'] },
 )
 
-const route = useRoute()
 const router = useRouter()
 const compTitle = computed(() => {
   const metaTitle = typeof route.meta.title === 'string' ? route.meta.title : ''
@@ -87,7 +90,7 @@ const handleBack = () => {
     router.back()
     return
   }
-  router.replace('/dashboard')
+  router.replace(homeUrls[0] ?? '/')
 }
 </script>
 <style lang="scss" scoped>
@@ -110,8 +113,7 @@ const handleBack = () => {
     @apply rounded-full! is-hover w-10 h-10 flex items-center justify-center;
     @apply md:w-9 md:h-9;
     .n-icon {
-      @apply text-2xl;
-      @apply md:text-xl;
+      @apply text-xl;
     }
   }
 }

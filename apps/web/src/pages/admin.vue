@@ -4,7 +4,7 @@
 <script setup lang="ts">
 definePage({
   meta: {
-    layout: 'dashboard',
+    layout: 'classic',
   },
 })
 </script>

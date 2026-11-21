@@ -111,10 +111,10 @@ const handleClear = () => {
 </script>
 <style lang="scss" scoped>
 .bg-picker {
-  @apply flex flex-row gap-2;
+  @apply flex flex-row justify-end flex-wrap gap-2;
 
   &__option {
-    @apply relative flex flex-col items-center gap-1 rounded-lg bg-transparent p-1;
+    @apply relative flex flex-col items-center gap-1 rounded-lg bg-transparent p-1 w-24;
     border: 2px solid transparent;
     transition: border-color 0.15s;
 

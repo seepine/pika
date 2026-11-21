@@ -27,18 +27,17 @@ declare module 'vue-router' {
    */
   interface RouteMeta {
     /**
-     * 布局组件名称，例如 /src/layouts/empty.vue，则为 empty
+     * 布局组件
      * 注意：只对根页面有效，在子页面声明不会生效
-     *   例如 /src/pages/xxx.vue
-     *   或者 /src/pages/xxx/index.vue
+     *   - 有效 src/pages/xxx.vue
+     *   - 有效 src/pages/xxx/index.vue
+     *   - 无效 src/pages/xxx/yyy.vue
      *
-     * 也会根据路径匹配，例如存在 layouts/admin.vue
-     * 则 pages/admin/xxx.vue 下都会默认使用该路由
-     *
-     *
-     * @default default
+     * 若未设置，则默认根据路径匹配，例如 pages/foo/xxx.vue 页面
+     *   - 优先使用 layouts/foo.vue
+     *   - 若不存在则使用 layouts/default.vue
      */
-    layout?: 'empty' | 'dashboard' | 'liquid-glass'
+    layout?: 'classic' | 'empty' | 'liquid-glass'
     /**
      * 标题
      */
@@ -49,7 +48,9 @@ declare module 'vue-router' {
      */
     keepAlive?: boolean
     /**
-     * 隐藏 dashboard 布局顶部 header（用于全屏内容页）
+     * 隐藏当前布局的顶部 header（用于全屏内容页）
+     *
+     * 该 meta 由布局自行实现，自定义布局可参考 classic 的处理方式
      * @default false
      */
     hideHeader?: boolean
@@ -98,16 +99,5 @@ router.beforeEach((to) => {
 watch(i18n.global.locale, () => {
   setDocumentTitle(router.currentRoute.value.meta.title)
 })
-
-/**
- * 是否存在「站内」上一页
- *
- * vue-router 每次导航都会把上一条路由的地址写入 `window.history.state.back`：
- * - 首次进入站点（浏览器新标签页直接打开、刷新、或首个导航是 replace）时 `back` 为 null
- * - 站内跳转后 `back` 为字符串
- *
- * 注意：不能用 `window.history.length > 1` 判断，它包含了进入本站之前的历史记录
- */
-export const hasBackRoute = () => typeof window.history.state?.back === 'string'
 
 export default router

@@ -3,8 +3,26 @@ import { user, type User, type UserInsert } from '@/system/schemas/user'
 import { escapeLike } from '@/system/utils/sql'
 import dayjs from 'dayjs'
 import { useDb } from '@/common/db'
+import { t } from '@/common/plugins/i18n'
+import { userPreference } from '@/system/schemas/user-preference'
+import { userMultiFactor } from '@/system/schemas/user-multi-factor'
+import { HttpError } from '@pika/elysia-plugins'
 
 export abstract class UserRepository {
+  /**
+   *
+   * @param id 用户 id
+   * @param errorStatus 如用户已注销或删除，错误码401触发重新登录，管理端等场景可传 404
+   * @returns User
+   */
+  static async findByIdOrThrow(id: string, errorStatus = 401) {
+    const row = await UserRepository.findById(id)
+    if (!row) {
+      throw new HttpError(t('SYSTEM.USER_NOT_FOUND'), errorStatus)
+    }
+    return row
+  }
+
   static async list(params: {
     page: number
     pageSize: number
@@ -82,7 +100,15 @@ export abstract class UserRepository {
     return row!
   }
 
-  static async removeById(id: string) {
-    await useDb().delete(user).where(eq(user.id, id))
+  /**
+   * 删除并清理关联数据
+   * @param id 用户id
+   */
+  static async removeAndClearById(id: string) {
+    await useDb().transaction(async (tx) => {
+      await tx.delete(user).where(eq(user.id, id))
+      await tx.delete(userPreference).where(eq(userPreference.userId, id))
+      await tx.delete(userMultiFactor).where(eq(userMultiFactor.userId, id))
+    })
   }
 }

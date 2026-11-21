@@ -42,8 +42,11 @@ export const authRouter = new Elysia({
     },
     async ({ body, jwt, request, requestIp }) => {
       const userAgent = request.headers.get('user-agent') ?? undefined
-      let user: JwtPayload | undefined
+      if (!userAgent) {
+        throw new HttpError(t('SYSTEM.USER_AGENT_REQUIRED'), 400)
+      }
 
+      let user: JwtPayload | undefined
       switch (body.grant_type) {
         case 'password':
           user = await AuthService.oauthPassword(body, requestIp, userAgent)
@@ -103,7 +106,7 @@ export const authRouter = new Elysia({
         summary: 'Get current userinfo',
       },
       response: z.object({
-        sub: z.string().describe('唯一标识，类似于用户id'),
+        sub: z.string().describe('唯一标识, 类似于用户id'),
         name: z.string().describe('名称'),
         picture: z.string().describe('头像'),
         roles: z.array(z.string()).describe('角色'),

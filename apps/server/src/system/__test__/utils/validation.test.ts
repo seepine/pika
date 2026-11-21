@@ -15,6 +15,14 @@ describe('emailSchema', () => {
     }
   })
 
+  test('忽略首尾空格，校验与落库均为 trim 后的值', () => {
+    const result = emailSchema.safeParse('  admin@example.com  ')
+    expect(result.success).toBeTrue()
+    expect(result.data).toBe('admin@example.com')
+    // trim 后仍超长依旧拒绝
+    expect(isAccepted(`  ${'a'.repeat(45)}@gmail.com  `)).toBeFalse()
+  })
+
   test('拒绝 + 子地址与其他特殊字符，避免派生出大量随机邮箱', () => {
     for (const email of [
       'admin+1@gmail.com',

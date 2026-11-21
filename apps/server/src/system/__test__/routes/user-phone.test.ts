@@ -42,11 +42,6 @@ describe('修改手机号', () => {
     appHandle = await startApp({ port: 48529 })
     api = treaty<Api>(appHandle.baseUrl)
 
-    for (const email of [boundEmail, unboundEmail]) {
-      const existing = await UserRepository.findByEmail(email).catch(() => null)
-      if (existing) await UserRepository.removeById(existing.id).catch(() => {})
-    }
-
     boundUserId = (
       await UserRepository.save({
         name: 'edit-phone-bound',
@@ -72,9 +67,6 @@ describe('修改手机号', () => {
 
   afterAll(async () => {
     await appHandle.app.stop()
-    for (const id of [boundUserId, unboundUserId]) {
-      if (id) await UserRepository.removeById(id).catch(() => {})
-    }
     await Promise.all(
       [boundPhone, newBoundPhone, newUnboundPhone].map((phone) =>
         cache.del(`${SmsService.KEY_PREFIX}${phone}`),

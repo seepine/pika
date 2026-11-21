@@ -1,8 +1,7 @@
 <template>
-  <div class="setting-security">
-    <n-card content-class="py-2!">
-      <np-cell-group bordered :options="options"></np-cell-group>
-    </n-card>
+  <div class="flex flex-col gap-4">
+    <c-cell-card :title="t('account')" :options="options"></c-cell-card>
+    <multi-factor-card></multi-factor-card>
   </div>
 </template>
 <script setup lang="tsx">
@@ -12,6 +11,7 @@ import { usePhone } from './phone'
 import { usePassword } from './password'
 import { useI18n } from 'vue-i18n'
 import { i18nTitle } from '@/utils/i18n-title'
+import MultiFactorCard from './components/multi-factor.vue'
 
 const { t } = useI18n()
 definePage({
@@ -45,7 +45,9 @@ const buildCell = <T extends object>(config: {
   return {
     label: () => <span>{config.label}</span>,
     icon: () => <NIcon class={config.icon}></NIcon>,
-    description: () => <span>{config.description()}</span>,
+    description: () => (
+      <div class="min-h-[20px]">{editMode.value === config.mode ? '' : config.description()}</div>
+    ),
     footer: () =>
       editMode.value === config.mode ? (
         <NpForm ref={formRef} class="mt-4" option={formOption.value}></NpForm>
@@ -109,36 +111,10 @@ const options: NpCellGroupOption[] = [
   }),
 ]
 </script>
-<style lang="scss">
-.setting-security {
-  .np-cell {
-    --np-cell-padding-y: 8px;
-    .np-cell__icon {
-      @apply pr-4;
-      .n-icon {
-        @apply w-6 h-6;
-      }
-    }
-    .np-cell__wrapper {
-      .np-cell__left {
-        flex: 1;
-      }
-      .np-cell__right {
-        padding-top: 2px;
-      }
-    }
-    .np-cell__footer {
-      padding-bottom: 0;
-    }
-  }
-  .np-form {
-    max-width: 440px;
-  }
-}
-</style>
 
 <i18n lang="yaml">
 zh:
+  account: 登录方式
   email: 邮箱
   phone: 手机号
   password: 密码
@@ -152,6 +128,7 @@ zh:
   cancel: 取消
   save: 保存
 en:
+  account: Sign-in methods
   email: Email
   phone: Phone
   password: Password

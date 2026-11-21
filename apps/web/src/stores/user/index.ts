@@ -2,6 +2,12 @@ import { defineStore } from 'pinia'
 import type { User, TokenInfo } from './types'
 import { useStorage } from '@/utils/storage'
 
+/** 登录参数，与后端 token 接口的 `grant_type` 分支一致 */
+type LoginParams =
+  | { grant_type: 'password'; username: string; password: string }
+  | { grant_type: 'phone_code'; phone: string; code: string }
+  | { grant_type: 'email_code'; email: string; code: string }
+
 const defaultUser: User = {
   id: '10000',
   nickname: 'Momo',
@@ -19,8 +25,8 @@ export const useUserStore = defineStore('user', () => {
     usePreferenceStore().reset()
   }
 
-  const userinfo = async (toast = true) => {
-    const res = await Apis.auth.userinfo({ meta: { toast } })
+  const userinfo = async (toast = true, skipAuthRefresh = false) => {
+    const res = await Apis.auth.userinfo({ meta: { toast, skipAuthRefresh } })
     user.value = {
       ...res,
       id: res.sub,
@@ -40,38 +46,34 @@ export const useUserStore = defineStore('user', () => {
     })
   }
 
-  const loginPassword = async (username: string, password: string) => {
+  /**
+   * 登录请求共用逻辑。
+   * 需要第二因素时由 api 拦截器弹窗并重试，取消验证则请求直接失败，登录自然中止。
+   */
+  const login = async (data: LoginParams): Promise<void> => {
     tokenInfo.value = await Apis.auth.token({
-      data: {
-        grant_type: 'password',
-        username,
-        password,
-      },
+      data,
+      meta: { skipAuthRefresh: true },
     })
-    await userinfo()
+    try {
+      // 用户信息是登录结果的一部分：拿不到就不能带着默认用户继续跳转，否则权限判断全错
+      // token 刚签发，401 说明本次登录已失效，直接失败即可，不走自动刷新
+      await userinfo(false, true)
+    } catch (error) {
+      // 回滚已签发的 token，避免「已登录但用户信息是默认值」的中间态
+      tokenInfo.value = undefined
+      throw error
+    }
   }
 
-  const loginPhoneCode = async (phone: string, code: string) => {
-    tokenInfo.value = await Apis.auth.token({
-      data: {
-        grant_type: 'phone_code',
-        phone,
-        code,
-      },
-    })
-    await userinfo()
-  }
+  const loginPassword = (username: string, password: string) =>
+    login({ grant_type: 'password', username, password })
 
-  const loginEmailCode = async (email: string, code: string) => {
-    tokenInfo.value = await Apis.auth.token({
-      data: {
-        grant_type: 'email_code',
-        email,
-        code,
-      },
-    })
-    await userinfo()
-  }
+  const loginPhoneCode = (phone: string, code: string) =>
+    login({ grant_type: 'phone_code', phone, code })
+
+  const loginEmailCode = (email: string, code: string) =>
+    login({ grant_type: 'email_code', email, code })
 
   const sendCode = async (
     channel: 'email' | 'phone',

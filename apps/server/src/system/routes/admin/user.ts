@@ -61,3 +61,15 @@ export const adminUserRouter = new Elysia({
     },
     ({ params, user }) => AdminUserService.remove(params.id, user.sub),
   )
+  .delete(
+    '/multi-factor',
+    {
+      detail: {
+        operationId: 'removeMultiFactor',
+        summary: '移除用户多因素验证',
+      },
+      body: AdminUserService.RemoveMultiFactorBodySchema,
+      response: AdminUserService.RemoveMultiFactorRespSchema,
+    },
+    ({ body }) => AdminUserService.removeMultiFactor(body.id),
+  )

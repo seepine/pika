@@ -36,11 +36,6 @@ describe('邮箱与手机号验重', () => {
     appHandle = await startApp({ port: 48530 })
     api = treaty<Api>(appHandle.baseUrl)
 
-    for (const value of [email, otherEmail]) {
-      const existing = await UserRepository.findByEmail(value).catch(() => null)
-      if (existing) await UserRepository.removeById(existing.id).catch(() => {})
-    }
-
     userId = (
       await UserRepository.save({
         name: 'check-avail',
@@ -68,9 +63,6 @@ describe('邮箱与手机号验重', () => {
 
   afterAll(async () => {
     await appHandle.app.stop()
-    for (const id of [userId, otherUserId]) {
-      if (id) await UserRepository.removeById(id).catch(() => {})
-    }
   })
 
   test('未登录时拒绝验重', async () => {

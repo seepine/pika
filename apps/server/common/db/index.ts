@@ -49,7 +49,19 @@ if (globalThis._db === undefined) {
   })
 }
 
-const db = await globalThis._db
+let db = await globalThis._db
+
+/** 连接被关闭后重新创建，供测试环境在每个用例文件结束时真正关闭后复用 */
+const ensureDb = async (): Promise<Db> => {
+  if (db === undefined) {
+    globalThis._db = createDb().catch((error) => {
+      globalThis._db = undefined
+      throw error
+    })
+    db = await globalThis._db
+  }
+  return db
+}
 
 export const useDb = () => {
   if (db === undefined) {
@@ -60,11 +72,11 @@ export const useDb = () => {
 
 export const closeDb = async () => {
   // 热重载触发的 shutdown 不真正关闭连接，供下一次热重载复用
-  if (globalThis.__is_hot__) {
+  if (globalThis.__is_hot__ && Bun.env.NODE_ENV !== 'test') {
     return
   }
-
-  await useDb().$client.close()
+  await db?.$client.close()
+  db = undefined
   globalThis._db = undefined
 }
 
@@ -77,6 +89,7 @@ const migrationConfig: MigrationConfig = {
 }
 
 export const runMigrate = async (cfg?: MigrationConfig) => {
+  await ensureDb()
   const db = useDb()
   const config = {
     ...migrationConfig,

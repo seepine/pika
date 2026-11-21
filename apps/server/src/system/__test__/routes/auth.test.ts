@@ -1,13 +1,10 @@
 import dayjs from 'dayjs'
-import { inArray } from 'drizzle-orm'
 import { treaty } from '@elysia/eden'
 import { type Api, startApp } from '@/app'
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { cache } from '@/common/cache'
-import { useDb } from '@/common/db'
 import { UserRepository } from '@/system/repositories/user'
 import { ConfigService } from '@/system/services/config'
-import { userLoginLog } from '@/system/schemas/user-login-log'
 import { EmailService } from '@/system/services/email'
 import { SmsService } from '@/system/services/sms'
 import { hashPassword } from '@/common/utils/crypto'
@@ -22,12 +19,6 @@ const missingPhone = '13800000725'
 // 注册用例专用账号，避免与登录用例互相干扰
 const registerPhone = '13800000825'
 const registerEmail = 'code-login-48526@gmail.com'
-
-const cleanLoginLogs = () => {
-  return useDb()
-    .delete(userLoginLog)
-    .where(inArray(userLoginLog.username, [phone, email, limitedPhone, missingPhone]))
-}
 
 // update 的 auth 是整体配置对象，需先读出再覆盖 regType；走 Service 以同步失效配置缓存
 const setRegType = async (regType: 'email' | 'phone') => {
@@ -44,18 +35,6 @@ describe('登录与 Token', () => {
     appHandle = await startApp({ port: 48525 })
     api = treaty<Api>(appHandle.baseUrl)
 
-    // 清理残留用户和日志，避免唯一键冲突及限流干扰
-    await cleanLoginLogs()
-    for (const existing of await Promise.all([
-      UserRepository.findByPhone(phone),
-      UserRepository.findByEmail(email),
-      UserRepository.findByPhone(registerPhone),
-    ])) {
-      if (existing) {
-        await UserRepository.removeById(existing.id)
-      }
-    }
-
     const user = await UserRepository.save({
       name: 'code-login',
       email,
@@ -68,16 +47,7 @@ describe('登录与 Token', () => {
 
   afterAll(async () => {
     await appHandle.app.stop()
-    // 恢复默认注册方式，避免影响其他测试文件
-    await setRegType('email')
-    if (userId) {
-      await UserRepository.removeById(userId).catch(() => {})
-    }
-    await cleanLoginLogs()
-    const registerUser = await UserRepository.findByPhone(registerPhone)
-    if (registerUser) {
-      await UserRepository.removeById(registerUser.id).catch(() => {})
-    }
+    // 验证码缓存在进程内共享，需清理避免影响其他测试文件
     await Promise.all([
       cache.del(`${SmsService.KEY_PREFIX}${phone}`),
       cache.del(`${EmailService.KEY_PREFIX}${email}`),
@@ -184,7 +154,8 @@ describe('登录与 Token', () => {
   })
 
   test('连续失败达到上限后返回 429', async () => {
-    for (let i = 0; i < 5; i++) {
+    // 故意多打几次：容忍限流阈值后续调整，只要最终能触发即可
+    for (let i = 0; i < 15; i++) {
       await api.system.oauth.token.post({
         grant_type: 'phone_code',
         phone: limitedPhone,

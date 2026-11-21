@@ -10,6 +10,12 @@ import { cache } from '@/common/cache'
 import { CaptchaService } from './captcha'
 import { EmailService } from './email'
 import { SmsService } from './sms'
+import {
+  MultiFactorError,
+  MultiFactorService,
+  mfaSchema,
+  type MultiFactorVerify,
+} from './multi-factor'
 import { emailSchema, passwordSchema } from '@/system/utils/validation'
 import { HttpError } from '@pika/elysia-plugins'
 import { zodDayjs } from '@/common/zod'
@@ -18,11 +24,47 @@ import { hashPassword, verifyPassword } from '@/common/utils/crypto'
 
 type LoginType = 'password' | 'phone_code' | 'email_code'
 
-/** 失败次数过多时拒绝登录，避免暴力破解 */
+/** 根据登录日志判断，失败次数过多时拒绝登录，避免暴力破解 */
 const assertLoginAllowed = async (ip: string, username: string): Promise<void> => {
   const recentFails = await UserLoginLogRepository.countRecentFailures(ip, username, 10)
-  if (recentFails >= 5) {
+  if (recentFails >= 10) {
     throw new HttpError(t('SYSTEM.LOGIN_RATE_LIMITED'), 429)
+  }
+}
+
+/** 已开启多因素验证时校验第二因素，失败时写入登录失败日志 */
+const assertLoginMultiFactor = async (
+  user: { id: string; loginMultiFactorEnabled: boolean },
+  mfa: Partial<MultiFactorVerify> | undefined,
+  log: { username: string; ip: string; userAgent: string; loginType: LoginType },
+): Promise<void> => {
+  // 判断开启登录验证，且存在多因素验证
+  const { hasMultiFactor } = await MultiFactorService.hasMultiFactor(user.id)
+  if (!user.loginMultiFactorEnabled || !hasMultiFactor) {
+    return
+  }
+  try {
+    await MultiFactorService.verifyMultiFactorOrThrow({
+      userId: user.id,
+      mfa: mfa,
+      ip: log.ip,
+      userAgent: log.userAgent,
+    })
+  } catch (error) {
+    // 「需要补充第二因素」是登录流程的中间态，不计入失败次数，也不污染安全审计日志
+    if (error instanceof MultiFactorError && error.reason === 'required') {
+      throw error
+    }
+    await UserLoginLogRepository.save({
+      ...log,
+      userId: user.id,
+      success: false,
+      failReason:
+        error instanceof MultiFactorError
+          ? (error.reasonMsg ?? loginFailReasons.multiFactorIncorrect)
+          : loginFailReasons.multiFactorIncorrect,
+    })
+    throw error
   }
 }
 
@@ -53,12 +95,14 @@ const finishLogin = async (
 }
 
 export abstract class AuthService {
-  static OAuthTokenPasswordSchema = z.object({
-    grant_type: z.literal('password'),
-    username: z.string().min(1, t('SYSTEM.USERNAME_REQUIRED')),
-    password: z.string().min(1, t('SYSTEM.PASSWORD_REQUIRED')),
-    scope: z.string().optional(),
-  })
+  static OAuthTokenPasswordSchema = z
+    .object({
+      grant_type: z.literal('password'),
+      username: z.string().trim().min(1, t('SYSTEM.USERNAME_REQUIRED')),
+      password: z.string().min(1, t('SYSTEM.PASSWORD_REQUIRED')),
+      scope: z.string().optional(),
+    })
+    .extend(mfaSchema.shape)
 
   static OAuthAuthorizationCodeSchema = z.object({
     grant_type: z.literal('authorization_code'),
@@ -69,19 +113,26 @@ export abstract class AuthService {
     scope: z.string().optional(),
   })
 
-  static OAuthTokenPhoneCodeSchema = z.object({
-    grant_type: z.literal('phone_code'),
-    phone: z.string().min(1, t('SYSTEM.PHONE_REQUIRED')).refine(isPhone, t('SYSTEM.PHONE_INVALID')),
-    code: z.string().min(1, t('SYSTEM.VERIFICATION_CODE_REQUIRED')),
-    scope: z.string().optional(),
-  })
+  static OAuthTokenPhoneCodeSchema = z
+    .object({
+      grant_type: z.literal('phone_code'),
+      phone: z
+        .string()
+        .min(1, t('SYSTEM.PHONE_REQUIRED'))
+        .refine(isPhone, t('SYSTEM.PHONE_INVALID')),
+      code: z.string().min(1, t('SYSTEM.VERIFICATION_CODE_REQUIRED')),
+      scope: z.string().optional(),
+    })
+    .extend(mfaSchema.shape)
 
-  static OAuthTokenEmailCodeSchema = z.object({
-    grant_type: z.literal('email_code'),
-    email: emailSchema,
-    code: z.string().min(1, t('SYSTEM.VERIFICATION_CODE_REQUIRED')),
-    scope: z.string().optional(),
-  })
+  static OAuthTokenEmailCodeSchema = z
+    .object({
+      grant_type: z.literal('email_code'),
+      email: emailSchema,
+      code: z.string().min(1, t('SYSTEM.VERIFICATION_CODE_REQUIRED')),
+      scope: z.string().optional(),
+    })
+    .extend(mfaSchema.shape)
 
   static TokenHeadersSchema = z
     .object({ authorization: z.string().optional() })
@@ -113,16 +164,10 @@ export abstract class AuthService {
   static oauthPassword = async (
     body: z.infer<typeof AuthService.OAuthTokenPasswordSchema>,
     ip: string,
-    userAgent?: string,
+    userAgent: string,
   ): Promise<JwtPayload> => {
-    if (!userAgent) {
-      throw new HttpError(t('SYSTEM.USER_AGENT_REQUIRED'), 400)
-    }
-
-    // 与其他登录路径保持一致：邮箱去空格并转小写，手机号仅去空格
-    const inputUsername = body.username.trim()
-    const usernameIsEmail = isEmail(inputUsername)
-    const username = usernameIsEmail ? inputUsername.toLowerCase() : inputUsername
+    const usernameIsEmail = isEmail(body.username)
+    const username = usernameIsEmail ? body.username.toLowerCase() : body.username
 
     await assertLoginAllowed(ip, username)
 
@@ -157,6 +202,14 @@ export abstract class AuthService {
       throw new HttpError(t('SYSTEM.ACCOUNT_OR_PASSWORD_INCORRECT'), 401)
     }
 
+    // 开启多因素验证后，每次登录都需在同一请求中带上验证方式与验证码
+    await assertLoginMultiFactor(user, body, {
+      username,
+      ip,
+      userAgent,
+      loginType: 'password',
+    })
+
     return finishLogin(user, {
       username,
       ip,
@@ -165,24 +218,18 @@ export abstract class AuthService {
     })
   }
 
-  // 验证码通过后删除缓存，并记录登录结果
-  private static oauthCodeLogin = async (
-    {
-      username,
-      code,
-      loginType,
-    }: {
+  // 验证码与多因素验证通过后删除缓存，并记录登录结果
+  private static _oauthCodeLogin = async (
+    body: {
       username: string
       code: string
       loginType: Exclude<LoginType, 'password'>
+      mfa: Partial<MultiFactorVerify> | undefined
     },
     ip: string,
-    userAgent?: string,
+    userAgent: string,
   ): Promise<JwtPayload> => {
-    if (!userAgent) {
-      throw new HttpError(t('SYSTEM.USER_AGENT_REQUIRED'), 400)
-    }
-
+    const { username, code, loginType, mfa } = body
     await assertLoginAllowed(ip, username)
 
     const isEmailLogin = loginType === 'email_code'
@@ -198,28 +245,33 @@ export abstract class AuthService {
         success: false,
         failReason: loginFailReasons.userNotFound,
       })
-      // 与“验证码错误”保持同一文案，避免账号枚举
+      // 与[验证码错误]保持同一文案，避免账号枚举
       throw new HttpError(t('SYSTEM.VERIFICATION_CODE_INCORRECT'), 401)
     }
 
-    try {
-      if (isEmailLogin) {
-        await EmailService.verifyCode(username, code)
-      } else {
-        await SmsService.verifyCode(username, code)
+    const codeStore = isEmailLogin ? EmailService : SmsService
+    // 同一用户的验证码消费需串行，否则并发请求能同时通过校验
+    await cache.lock(`user:${user.id}:login_code`, async () => {
+      try {
+        // 多因素验证通过后才消费验证码，否则用户取消验证后需要重新发送
+        await codeStore.verifyCodeAutoDelete(username, code, false)
+      } catch (error) {
+        await UserLoginLogRepository.save({
+          username,
+          userId: user.id,
+          ip,
+          userAgent,
+          loginType,
+          success: false,
+          failReason: loginFailReasons.verificationCodeIncorrect,
+        })
+        throw error
       }
-    } catch (error) {
-      await UserLoginLogRepository.save({
-        username,
-        userId: user.id,
-        ip,
-        userAgent,
-        loginType,
-        success: false,
-        failReason: loginFailReasons.verificationCodeIncorrect,
-      })
-      throw error
-    }
+
+      // 验证码登录同样需要第二因素，避免已开启多因素验证的账号绕过校验
+      await assertLoginMultiFactor(user, mfa, { username, ip, userAgent, loginType })
+      await codeStore.deleteCode(username)
+    })
 
     return finishLogin(user, { username, ip, userAgent, loginType })
   }
@@ -227,13 +279,14 @@ export abstract class AuthService {
   static oauthPhoneCode = async (
     body: z.infer<typeof AuthService.OAuthTokenPhoneCodeSchema>,
     ip: string,
-    userAgent?: string,
+    userAgent: string,
   ): Promise<JwtPayload> => {
-    return AuthService.oauthCodeLogin(
+    return AuthService._oauthCodeLogin(
       {
         username: body.phone,
         code: body.code,
         loginType: 'phone_code',
+        mfa: body,
       },
       ip,
       userAgent,
@@ -243,14 +296,14 @@ export abstract class AuthService {
   static oauthEmailCode = async (
     body: z.infer<typeof AuthService.OAuthTokenEmailCodeSchema>,
     ip: string,
-    userAgent?: string,
+    userAgent: string,
   ): Promise<JwtPayload> => {
-    const email = body.email.toLowerCase().trim()
-    return AuthService.oauthCodeLogin(
+    return AuthService._oauthCodeLogin(
       {
-        username: email,
+        username: body.email.toLowerCase(),
         code: body.code,
         loginType: 'email_code',
+        mfa: body,
       },
       ip,
       userAgent,

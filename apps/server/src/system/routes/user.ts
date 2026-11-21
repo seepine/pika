@@ -27,6 +27,29 @@ export const userRouter = new Elysia({
     },
     ({ body, user }) => UserService.edit(user.sub, body),
   )
+  .patch(
+    '/password',
+    {
+      detail: {
+        operationId: 'changePassword',
+        summary: 'Change user password',
+      },
+      body: UserService.ChangePasswordBodySchema,
+      response: UserService.ChangePasswordRespSchema,
+    },
+    async ({ body, user, requestIp, request }) => {
+      await rateLimit(
+        { second: 2, minute10: 20, errorMessage: t('SYSTEM.REQUEST_RATE_LIMITED_MINUTE') },
+        `change_password:${user.sub}`,
+      )
+      return UserService.changePassword(
+        user.sub,
+        body,
+        requestIp,
+        request.headers.get('user-agent') ?? '',
+      )
+    },
+  )
   .post(
     '/edit/email',
     {

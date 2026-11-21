@@ -24,11 +24,9 @@ describe('adminRouter', () => {
     appHandle = await startApp({ port: 48523 })
     api = treaty<Api>(appHandle.baseUrl)
 
-    // 容错清理残留数据：上次失败遗留的 admin 用户会造成 unique 冲突
-    for (const email of [adminEmail, updatedAdminEmail]) {
-      const existing = await UserRepository.findByEmail(email).catch(() => null)
-      if (existing) await UserRepository.removeById(existing.id).catch(() => {})
-    }
+    // 启动 hook 会用 ADMIN_EMAIL 自动建管理员，删掉后按用例自己的密码重建
+    const existingAdmin = await UserRepository.findByEmail(adminEmail).catch(() => null)
+    if (existingAdmin) await UserRepository.removeAndClearById(existingAdmin.id)
 
     adminUserId = (
       await UserRepository.save({
@@ -42,9 +40,6 @@ describe('adminRouter', () => {
   })
 
   afterAll(async () => {
-    if (adminUserId) {
-      await UserRepository.removeById(adminUserId).catch(() => {})
-    }
     await appHandle.app.stop()
     if (originalAdminEmail === undefined) {
       delete process.env['ADMIN_EMAIL']

@@ -1,12 +1,10 @@
 import dayjs from 'dayjs'
-import { inArray } from 'drizzle-orm'
 import { treaty } from '@elysia/eden'
 import { type Api, startApp } from '@/app'
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
-import { useDb } from '@/common/db'
 import { UserRepository } from '@/system/repositories/user'
 import { UserLoginLogRepository } from '@/system/repositories/user-login-log'
-import { userLoginLog, loginFailReasons } from '@/system/schemas/user-login-log'
+import { loginFailReasons } from '@/system/schemas/user-login-log'
 import { hashPassword } from '@/common/utils/crypto'
 
 const adminEmail = 'admin-login-log-48531@gmail.com'
@@ -17,11 +15,6 @@ const logUsername = 'login-log-user-48531'
 const logIp = '10.99.99.31'
 const webUserAgent =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/120.0.0.0 Safari/537.36'
-
-const cleanLoginLogs = () =>
-  useDb()
-    .delete(userLoginLog)
-    .where(inArray(userLoginLog.username, [logUsername, adminEmail, targetEmail]))
 
 describe('adminLoginLogRouter', () => {
   let appHandle!: Awaited<ReturnType<typeof startApp>>
@@ -37,11 +30,9 @@ describe('adminLoginLogRouter', () => {
     appHandle = await startApp({ port: 48531 })
     api = treaty<Api>(appHandle.baseUrl)
 
-    await cleanLoginLogs()
-    for (const email of [adminEmail, targetEmail]) {
-      const existing = await UserRepository.findByEmail(email).catch(() => null)
-      if (existing) await UserRepository.removeById(existing.id).catch(() => {})
-    }
+    // 启动 hook 会用 ADMIN_EMAIL 自动建管理员，删掉后按用例自己的密码重建
+    const existingAdmin = await UserRepository.findByEmail(adminEmail).catch(() => null)
+    if (existingAdmin) await UserRepository.removeAndClearById(existingAdmin.id)
 
     adminUserId = (
       await UserRepository.save({
@@ -83,10 +74,6 @@ describe('adminLoginLogRouter', () => {
   })
 
   afterAll(async () => {
-    await cleanLoginLogs()
-    for (const id of [adminUserId, targetUserId]) {
-      if (id) await UserRepository.removeById(id).catch(() => {})
-    }
     await appHandle.app.stop()
     if (originalAdminEmail === undefined) {
       delete process.env['ADMIN_EMAIL']

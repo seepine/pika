@@ -36,9 +36,6 @@ describe('用户外观风格设定', () => {
     appHandle = await startApp({ port: 48532 })
     api = treaty<Api>(appHandle.baseUrl)
 
-    const existing = await UserRepository.findByEmail(email).catch(() => null)
-    if (existing) await UserRepository.removeById(existing.id).catch(() => {})
-
     userId = (
       await UserRepository.save({
         name: 'preference',
@@ -58,10 +55,6 @@ describe('用户外观风格设定', () => {
   })
 
   afterAll(async () => {
-    if (userId) {
-      await UserPreferenceRepository.removeByUserId(userId).catch(() => {})
-      await UserRepository.removeById(userId).catch(() => {})
-    }
     await appHandle.app.stop()
   })
 

@@ -5,35 +5,29 @@ import { UserRepository } from '@/system/repositories/user'
 import { EmailService } from '@/system/services/email'
 import { SmsService } from '@/system/services/sms'
 import { isNickname, isPhone, validateEmail } from '@pika/shared'
-import { createEmailSchema, emailSchema, optionalPasswordSchema } from '@/system/utils/validation'
+import { createEmailSchema, emailSchema, passwordSchema } from '@/system/utils/validation'
 import { HttpError } from '@pika/elysia-plugins'
 import { hashPassword, verifyPassword } from '@/common/utils/crypto'
+import { mfaSchema, MultiFactorService } from '@/system/services/multi-factor'
 
 const isAvatarUrl = (url: string) => z.url().safeParse(url).success || url.startsWith('/')
 
 const verificationCodeField = (message: string) => z.string().min(4, message).max(8, message)
 
 export abstract class UserService {
-  static EditBodySchema = z
-    .object({
-      name: z
-        .string()
-        .min(2, t('SYSTEM.NICKNAME_LENGTH_INVALID', { min: 2, max: 20 }))
-        .max(20, t('SYSTEM.NICKNAME_LENGTH_INVALID', { min: 2, max: 20 }))
-        .optional()
-        .refine((val) => !val || isNickname(val), t('SYSTEM.NICKNAME_FORMAT_INVALID')),
-      password: optionalPasswordSchema,
-      newPassword: optionalPasswordSchema,
-      picture: z
-        .string()
-        .max(500, t('SYSTEM.AVATAR_URL_TOO_LONG'))
-        .refine(isAvatarUrl, t('SYSTEM.AVATAR_URL_INVALID'))
-        .optional(),
-    })
-    .refine((data) => Boolean(data.password) === Boolean(data.newPassword), {
-      message: t('SYSTEM.PASSWORD_CHANGE_FIELDS_REQUIRED'),
-      path: ['newPassword'],
-    })
+  static EditBodySchema = z.object({
+    name: z
+      .string()
+      .min(2, t('SYSTEM.NICKNAME_LENGTH_INVALID', { min: 2, max: 20 }))
+      .max(20, t('SYSTEM.NICKNAME_LENGTH_INVALID', { min: 2, max: 20 }))
+      .optional()
+      .refine((val) => !val || isNickname(val), t('SYSTEM.NICKNAME_FORMAT_INVALID')),
+    picture: z
+      .string()
+      .max(500, t('SYSTEM.AVATAR_URL_TOO_LONG'))
+      .refine(isAvatarUrl, t('SYSTEM.AVATAR_URL_INVALID'))
+      .optional(),
+  })
 
   static EditRespSchema = z.object({
     id: z.string(),
@@ -42,10 +36,7 @@ export abstract class UserService {
   })
 
   static edit = async (userId: string, body: z.infer<typeof UserService.EditBodySchema>) => {
-    const user = await UserRepository.findById(userId)
-    if (!user) {
-      throw new HttpError(t('SYSTEM.USER_NOT_FOUND'), 404)
-    }
+    const user = await UserRepository.findByIdOrThrow(userId, 404)
 
     const updateData: Parameters<typeof UserRepository.updateById>[1] = {}
 
@@ -57,15 +48,6 @@ export abstract class UserService {
       updateData.picture = body.picture
     }
 
-    if (body.password && body.password === body.newPassword) {
-      throw new HttpError(t('SYSTEM.NEW_PASSWORD_SAME_AS_OLD'))
-    }
-    if (body.password && body.newPassword) {
-      if (!user.password || !(await verifyPassword(body.password, user.password))) {
-        throw new HttpError(t('SYSTEM.OLD_PASSWORD_INCORRECT'))
-      }
-      updateData.password = await hashPassword(body.newPassword)
-    }
     if (Object.keys(updateData).length > 0) {
       await UserRepository.updateById(userId, updateData)
     }
@@ -75,6 +57,44 @@ export abstract class UserService {
       name: updateData.name || user.name,
       picture: updateData.picture || user.picture || undefined,
     }
+  }
+
+  static ChangePasswordBodySchema = z
+    .object({
+      oldPassword: z.string().min(1, t('SYSTEM.PASSWORD_REQUIRED')),
+      newPassword: passwordSchema,
+    })
+    .extend(mfaSchema.shape)
+
+  static ChangePasswordRespSchema = z.object({
+    success: z.boolean(),
+  })
+
+  static changePassword = async (
+    userId: string,
+    body: z.infer<typeof UserService.ChangePasswordBodySchema>,
+    ip: string,
+    userAgent: string,
+  ): Promise<z.infer<typeof UserService.ChangePasswordRespSchema>> => {
+    // 找不到用户，判断为用户已被注销或删除，抛出401触发重新登录
+    const user = await UserRepository.findByIdOrThrow(userId)
+    if (!user.password || !(await verifyPassword(body.oldPassword, user.password))) {
+      throw new HttpError(t('SYSTEM.OLD_PASSWORD_INCORRECT'), 400)
+    }
+    if (body.oldPassword === body.newPassword) {
+      throw new HttpError(t('SYSTEM.NEW_PASSWORD_SAME_AS_OLD'), 400)
+    }
+
+    await MultiFactorService.verifyMultiFactorOrThrow({
+      userId,
+      mfa: body,
+      ip,
+      userAgent,
+    })
+
+    await UserRepository.updateById(userId, { password: await hashPassword(body.newPassword) })
+
+    return { success: true }
   }
 
   static EditEmailBodySchema = z.object({
@@ -100,10 +120,7 @@ export abstract class UserService {
     const newEmail = body.newEmail.toLowerCase().trim()
     const oldEmail = body.oldEmail?.toLowerCase().trim() ?? ''
     const oldCode = body.oldCode ?? ''
-    const user = await UserRepository.findById(userId)
-    if (!user) {
-      throw new HttpError(t('SYSTEM.USER_NOT_FOUND'), 404)
-    }
+    const user = await UserRepository.findByIdOrThrow(userId, 404)
 
     const currentEmail = user.email?.toLowerCase().trim() ?? ''
     if (currentEmail) {
@@ -183,10 +200,7 @@ export abstract class UserService {
     const newPhone = body.newPhone
     const oldPhone = body.oldPhone ?? ''
     const oldCode = body.oldCode ?? ''
-    const user = await UserRepository.findById(userId)
-    if (!user) {
-      throw new HttpError(t('SYSTEM.USER_NOT_FOUND'), 404)
-    }
+    const user = await UserRepository.findByIdOrThrow(userId, 404)
 
     const currentPhone = user.phoneNumber ?? ''
     if (currentPhone) {

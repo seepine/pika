@@ -36,7 +36,7 @@ const fakeOss = Bun.serve({
 })
 
 await rm(uploadPath, { recursive: true, force: true })
-const { app, baseUrl } = await startApp({ port: 48522 })
+const { app, baseUrl } = await startApp()
 const api = treaty<Api>(baseUrl)
 
 afterAll(async () => {

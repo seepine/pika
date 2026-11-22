@@ -13,9 +13,9 @@ import { userLoginLog } from '@/system/schemas/user-login-log'
 import { hashPassword } from '@/common/utils/crypto'
 import { generateTotp, generateTotpSecret, verifyTotp } from '@/common/utils/totp'
 
-const email = 'multi-factor-48534@gmail.com'
-const lockEmail = 'multi-factor-lock-48534@gmail.com'
-const adminEmail = 'multi-factor-admin-48534@gmail.com'
+const email = 'multi-factor@gmail.com'
+const lockEmail = 'multi-factor-lock@gmail.com'
+const adminEmail = 'multi-factor-admin@gmail.com'
 const password = 'MultiFactor123456'
 /** 默认登录设备 */
 const deviceA = 'test-device-a'
@@ -124,7 +124,7 @@ describe('多因素验证', () => {
     originalAdminEmail = process.env['ADMIN_EMAIL']
     process.env['ADMIN_EMAIL'] = adminEmail
 
-    appHandle = await startApp({ port: 48534 })
+    appHandle = await startApp()
     api = treaty<Api>(appHandle.baseUrl)
 
     // 启动 hook 会用 ADMIN_EMAIL 自动建管理员，删掉后按用例自己的密码重建
@@ -151,7 +151,7 @@ describe('多因素验证', () => {
   })
 
   afterAll(async () => {
-    await appHandle.app.stop()
+    if (appHandle) await appHandle.app.stop()
     if (originalAdminEmail === undefined) {
       delete process.env['ADMIN_EMAIL']
     } else {

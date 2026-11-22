@@ -6,7 +6,7 @@ import { UserRepository } from '@/system/repositories/user'
 import { UserPreferenceRepository } from '@/system/repositories/user-preference'
 import { hashPassword } from '@/common/utils/crypto'
 
-const email = 'preference-48532@gmail.com'
+const email = 'preference@gmail.com'
 const password = 'Preference123456'
 
 const appearance = {
@@ -21,7 +21,7 @@ const appearance = {
     sidebarBgColor: '21 21 25',
     sidebarBgTransparency: '0.95',
     mainBgType: 'image',
-    mainBgImageUrl: '/api/system/file/background-48532.png',
+    mainBgImageUrl: '/api/system/file/background.png',
     mainBgBlur: 8,
   },
 } as const
@@ -33,7 +33,7 @@ describe('用户外观风格设定', () => {
   let headers!: { Authorization: string }
 
   beforeAll(async () => {
-    appHandle = await startApp({ port: 48532 })
+    appHandle = await startApp()
     api = treaty<Api>(appHandle.baseUrl)
 
     userId = (
@@ -55,7 +55,7 @@ describe('用户外观风格设定', () => {
   })
 
   afterAll(async () => {
-    await appHandle.app.stop()
+    if (appHandle) await appHandle.app.stop()
   })
 
   test('未登录无法访问', async () => {
@@ -125,7 +125,7 @@ describe('用户外观风格设定', () => {
     const { data } = await api.system.user.preference.get({ headers })
     expect(data?.appearance?.dark.mainBgType).toBe('color')
     // 类型切回纯色后，图片地址仍按提交值保存，方便用户随时切回
-    expect(data?.appearance?.dark.mainBgImageUrl).toBe('/api/system/file/background-48532.png')
+    expect(data?.appearance?.dark.mainBgImageUrl).toBe('/api/system/file/background.png')
   })
 
   test('背景图可清除（空字符串）', async () => {

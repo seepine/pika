@@ -5,8 +5,8 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { UserRepository } from '@/system/repositories/user'
 import { hashPassword } from '@/common/utils/crypto'
 
-const adminEmail = 'admin-user-48527@gmail.com'
-const targetEmail = 'target-user-48527@gmail.com'
+const adminEmail = 'admin-user@gmail.com'
+const targetEmail = 'target-user@gmail.com'
 const targetPhone = '13800000527'
 // 不能与其它测试文件的手机号重复（user.phoneNumber 有唯一索引）
 const newTargetPhone = '13800000627'
@@ -23,7 +23,7 @@ describe('adminUserRouter', () => {
     originalAdminEmail = process.env['ADMIN_EMAIL']
     process.env['ADMIN_EMAIL'] = adminEmail
 
-    appHandle = await startApp({ port: 48527 })
+    appHandle = await startApp()
     api = treaty<Api>(appHandle.baseUrl)
 
     // 启动 hook 会用 ADMIN_EMAIL 自动建管理员，删掉后按用例自己的密码重建
@@ -52,7 +52,7 @@ describe('adminUserRouter', () => {
   })
 
   afterAll(async () => {
-    await appHandle.app.stop()
+    if (appHandle) await appHandle.app.stop()
     if (originalAdminEmail === undefined) {
       delete process.env['ADMIN_EMAIL']
     } else {
@@ -239,7 +239,7 @@ describe('adminUserRouter', () => {
 
   test('管理员更新邮箱时统一规范化为小写', async () => {
     const adminToken = await login(adminEmail)
-    const mixedEmail = 'Target-User-Norm-48527@Gmail.com'
+    const mixedEmail = 'Target-User-Norm@Gmail.com'
     const normalizedEmail = mixedEmail.toLowerCase()
 
     const { data, status } = await api.system.admin.user({ id: targetUserId }).put(

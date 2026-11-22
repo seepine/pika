@@ -7,7 +7,7 @@ import { useDb } from '@/common/db'
 import { verifyPassword } from '@/common/utils/crypto'
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 
-const adminEmail = 'admin-bootstrap-48533@gmail.com'
+const adminEmail = 'admin-bootstrap@gmail.com'
 const adminPassword = 'Admin123456'
 
 /** 清空用户表 */
@@ -25,7 +25,7 @@ describe('initAdminUser', () => {
     originalEnv['ADMIN_PASSWORD'] = process.env['ADMIN_PASSWORD']
 
     // 先用原始环境启动：迁移在这一步完成，且快照不含后面手动建的管理员账号
-    appHandle = await startApp({ port: 48533 })
+    appHandle = await startApp()
     api = treaty<Api>(appHandle.baseUrl)
     userSnapshot = await useDb().select().from(user)
 
@@ -41,7 +41,7 @@ describe('initAdminUser', () => {
     if (userSnapshot.length > 0) {
       await useDb().insert(user).values(userSnapshot)
     }
-    await appHandle.app.stop()
+    if (appHandle) await appHandle.app.stop()
     // 恢复原始环境变量，避免影响其它测试文件
     for (const [key, value] of Object.entries(originalEnv)) {
       if (value === undefined) {
@@ -70,7 +70,7 @@ describe('initAdminUser', () => {
 
   test('库中已有用户时不再自动创建管理员账号', async () => {
     // 换一个未使用的 ADMIN_EMAIL 也不应建号
-    const anotherEmail = 'admin-bootstrap-skip-48533@gmail.com'
+    const anotherEmail = 'admin-bootstrap-skip@gmail.com'
     process.env['ADMIN_EMAIL'] = anotherEmail
     try {
       await ensureAdminUser()
@@ -97,7 +97,7 @@ describe('initAdminUser', () => {
   })
 
   test('ADMIN_PASSWORD 为占位符等弱口令时拒绝启动', async () => {
-    const weakEmail = 'admin-weak-password-48533@gmail.com'
+    const weakEmail = 'admin-weak-password@gmail.com'
     process.env['ADMIN_EMAIL'] = weakEmail
     process.env['ADMIN_PASSWORD'] = '?'
     try {

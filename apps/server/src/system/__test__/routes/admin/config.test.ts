@@ -6,8 +6,8 @@ import { cache } from '@/common/cache'
 import { UserRepository } from '@/system/repositories/user'
 import { hashPassword } from '@/common/utils/crypto'
 
-const adminEmail = 'admin-48523@gmail.com'
-const updatedAdminEmail = 'former-admin-48523@gmail.com'
+const adminEmail = 'admin@gmail.com'
+const updatedAdminEmail = 'former-admin@gmail.com'
 const password = 'Admin123456'
 
 describe('adminRouter', () => {
@@ -21,7 +21,7 @@ describe('adminRouter', () => {
     originalAdminEmail = process.env['ADMIN_EMAIL']
     process.env['ADMIN_EMAIL'] = adminEmail
 
-    appHandle = await startApp({ port: 48523 })
+    appHandle = await startApp()
     api = treaty<Api>(appHandle.baseUrl)
 
     // 启动 hook 会用 ADMIN_EMAIL 自动建管理员，删掉后按用例自己的密码重建
@@ -40,7 +40,7 @@ describe('adminRouter', () => {
   })
 
   afterAll(async () => {
-    await appHandle.app.stop()
+    if (appHandle) await appHandle.app.stop()
     if (originalAdminEmail === undefined) {
       delete process.env['ADMIN_EMAIL']
     } else {

@@ -7,9 +7,9 @@ import { UserRepository } from '@/system/repositories/user'
 import { SmsService } from '@/system/services/sms'
 import { hashPassword } from '@/common/utils/crypto'
 
-const boundEmail = 'edit-phone-bound-48529@gmail.com'
+const boundEmail = 'edit-phone-bound@gmail.com'
 const boundPhone = '13800000529'
-const unboundEmail = 'edit-phone-unbound-48529@gmail.com'
+const unboundEmail = 'edit-phone-unbound@gmail.com'
 const newBoundPhone = '13800000729'
 const newUnboundPhone = '13800000829'
 const password = 'EditPhone123456'
@@ -39,7 +39,7 @@ describe('修改手机号', () => {
     })
 
   beforeAll(async () => {
-    appHandle = await startApp({ port: 48529 })
+    appHandle = await startApp()
     api = treaty<Api>(appHandle.baseUrl)
 
     boundUserId = (
@@ -66,7 +66,7 @@ describe('修改手机号', () => {
   })
 
   afterAll(async () => {
-    await appHandle.app.stop()
+    if (appHandle) await appHandle.app.stop()
     await Promise.all(
       [boundPhone, newBoundPhone, newUnboundPhone].map((phone) =>
         cache.del(`${SmsService.KEY_PREFIX}${phone}`),

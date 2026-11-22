@@ -7,11 +7,11 @@ import { UserLoginLogRepository } from '@/system/repositories/user-login-log'
 import { loginFailReasons } from '@/system/schemas/user-login-log'
 import { hashPassword } from '@/common/utils/crypto'
 
-const adminEmail = 'admin-login-log-48531@gmail.com'
-const targetEmail = 'target-login-log-48531@gmail.com'
+const adminEmail = 'admin-login-log@gmail.com'
+const targetEmail = 'target-login-log@gmail.com'
 const password = 'Admin123456'
-// 日志用例专用用户名与 IP，避免与其他用例的数据互相干扰
-const logUsername = 'login-log-user-48531'
+// 日志用例专用用户名与 IP
+const logUsername = 'login-log-user'
 const logIp = '10.99.99.31'
 const webUserAgent =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/120.0.0.0 Safari/537.36'
@@ -27,7 +27,7 @@ describe('adminLoginLogRouter', () => {
     originalAdminEmail = process.env['ADMIN_EMAIL']
     process.env['ADMIN_EMAIL'] = adminEmail
 
-    appHandle = await startApp({ port: 48531 })
+    appHandle = await startApp()
     api = treaty<Api>(appHandle.baseUrl)
 
     // 启动 hook 会用 ADMIN_EMAIL 自动建管理员，删掉后按用例自己的密码重建
@@ -74,7 +74,7 @@ describe('adminLoginLogRouter', () => {
   })
 
   afterAll(async () => {
-    await appHandle.app.stop()
+    if (appHandle) await appHandle.app.stop()
     if (originalAdminEmail === undefined) {
       delete process.env['ADMIN_EMAIL']
     } else {

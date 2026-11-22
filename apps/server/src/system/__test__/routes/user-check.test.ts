@@ -5,11 +5,11 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test'
 import { UserRepository } from '@/system/repositories/user'
 import { hashPassword } from '@/common/utils/crypto'
 
-const email = 'check-avail-48530@gmail.com'
+const email = 'check-avail@gmail.com'
 const phone = '13800000530'
-const otherEmail = 'check-avail-other-48530@gmail.com'
+const otherEmail = 'check-avail-other@gmail.com'
 const otherPhone = '13800000630'
-const unusedEmail = 'check-avail-unused-48530@gmail.com'
+const unusedEmail = 'check-avail-unused@gmail.com'
 const unusedPhone = '13800000730'
 const password = 'Check123456'
 
@@ -33,7 +33,7 @@ describe('邮箱与手机号验重', () => {
   })
 
   beforeAll(async () => {
-    appHandle = await startApp({ port: 48530 })
+    appHandle = await startApp()
     api = treaty<Api>(appHandle.baseUrl)
 
     userId = (
@@ -62,7 +62,7 @@ describe('邮箱与手机号验重', () => {
   })
 
   afterAll(async () => {
-    await appHandle.app.stop()
+    if (appHandle) await appHandle.app.stop()
   })
 
   test('未登录时拒绝验重', async () => {

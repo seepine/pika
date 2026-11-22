@@ -1,4 +1,7 @@
 .n-input {
+  --n-color-focus: var(--n-color) !important;
+  --n-color-hover: var(--n-color) !important;
+  --n-border-focus: rgba(0, 0, 0, 0) !important;
   & .n-input__prefix .n-icon {
     margin-right: calc(var(--n-padding-left, 12px) - 8px);
   }
@@ -7,11 +10,21 @@
     border-radius: var(--n-border-radius, 3px);
   }
 }
-
-.n-button,
-.n-dropdown-option-body,
-.n-menu-item-content {
-  // cursor: default !important;
+.n-base-selection {
+  --n-color: rgba(46, 51, 56, 0.05) !important;
+  --n-color-focus: var(--n-color) !important;
+  --n-color-hover: var(--n-color) !important;
+  --n-border: rgba(0, 0, 0, 0) !important;
+  --n-border-focus: rgba(0, 0, 0, 0) !important;
+  --n-border-hover: rgba(0, 0, 0, 0) !important;
+  --n-border-active: rgba(0, 0, 0, 0) !important;
+  --n-color-active: var(--n-color) !important;
+  &__state-border {
+    box-shadow: unset !important;
+  }
+}
+html[theme-mode='dark'] .n-base-selection {
+  --n-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 .n-button:not(.n-button--disabled) {
@@ -28,6 +41,7 @@
     background-color: var(--n-color-pressed);
     color: var(--n-text-color-pressed);
   }
+
   &.n-button--default-type {
     transition: unset;
     .n-button__state-border {
@@ -42,4 +56,59 @@
 
 .n-card.n-modal {
   width: auto;
+}
+
+// 消除 cursor pointer
+.n-button,
+.n-dropdown-option-body,
+.n-menu-item-content {
+  cursor: default;
+}
+.n-tabs .n-tabs-tab {
+  cursor: default;
+}
+.n-base-selection .n-base-selection-label {
+  cursor: default;
+}
+.n-base-select-menu .n-base-select-option {
+  cursor: default;
+}
+.n-scrollbar,
+.n-scrollbar-rail {
+  .n-scrollbar-rail__scrollbar {
+    cursor: default !important;
+  }
+}
+// 特殊场景保留 pointer
+.n-input__suffix {
+  .n-button {
+    cursor: pointer;
+  }
+}
+
+// 优化字号
+.n-dropdown {
+  &.n-dropdown--small-size {
+    .n-dropdown-option-body {
+      &.n-dropdown-option-body--group {
+        .n-dropdown-option-body__label {
+          font-size: 12px !important;
+        }
+      }
+    }
+  }
+}
+.n-dropdown-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  &.n-dropdown--small-size {
+    gap: 1px;
+  }
+  // scrollable 时选项被包进滚动内容层，间距需在该层再声明一次
+  .n-dropdown-menu__content {
+    display: flex;
+    flex-direction: column;
+    gap: inherit;
+  }
 }

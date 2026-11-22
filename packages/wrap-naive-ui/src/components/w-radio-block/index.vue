@@ -1,6 +1,9 @@
 <!-- 封装自 n-tabs：用作分段单选块，options 切换选中项 -->
 <template>
-  <div :class="['w-radio-block', { 'w-radio-block--disabled': merged.disabled }]">
+  <div
+    v-if="merged.options?.length"
+    :class="['w-radio-block', { 'w-radio-block--disabled': merged.disabled }]"
+  >
     <n-tabs
       v-model:value="value"
       :size="merged.size"
@@ -56,6 +59,7 @@ const value = computed({
   .w-radio-block__tabs.n-tabs {
     .n-tabs-tab {
       padding: 4px 12px;
+      min-width: 40px;
       font-size: var(--text-size-xs);
       cursor: default;
       color: var(--color-text-2);
@@ -75,6 +79,11 @@ const value = computed({
         padding: 4px 16px;
         font-size: var(--text-size-sm);
       }
+    }
+
+    // 组件仅作分段选择器，pane 只承载 tab 文案，故隐藏内容容器
+    .n-tabs-pane-wrapper {
+      display: none;
     }
   }
 }

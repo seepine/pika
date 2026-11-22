@@ -22,17 +22,17 @@ bun run dev
 - Server: http://localhost:9528
 - OpenAPI docs: http://localhost:9528/api/openapi
 
-For custom configuration, copy `apps/server/.env.example` to `apps/server/.env.local` and edit it.
+For custom configuration, copy `apps/server/.env.development` to `apps/server/.env.local` and edit it. See `apps/server/.env.example` for more variables.
 
 ## Checks before committing
 
 ```bash
 bun run lint    # Prettier formatting
-bun run check   # Type checking
+bun run check   # Type checking and format validation
 bun run test    # Tests
 ```
 
-All of these must pass. CI runs the same checks on every pull request.
+All of these must pass. CI runs type checking, tests, and the build on every pull request, and validates commit messages.
 
 ## Commit convention
 
@@ -53,7 +53,7 @@ The `pre-commit` hook runs lint-staged on staged files. Please do not bypass it 
 
 1. Branch off `main`; names like `feat/xxx` or `fix/xxx` are recommended
 2. Keep the change focused — one PR should solve one problem
-3. Explain the background, the changes, and how you verified them in the PR description
+3. Follow the template in `.github/PULL_REQUEST_TEMPLATE.md`
 4. Add or update tests when behavior changes
 
 ## Code conventions

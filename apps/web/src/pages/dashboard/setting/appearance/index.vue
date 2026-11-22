@@ -5,11 +5,11 @@
 
     <g-layout-content>
       <div class="flex flex-col gap-4">
-        <c-cell-card :options="themeOptions"></c-cell-card>
+        <c-cell-card align="start" :options="themeOptions"></c-cell-card>
 
-        <c-cell-card :title="t('lightStyle')" :options="lightOptions"></c-cell-card>
+        <c-cell-card :title="t('lightStyle')" align="start" :options="lightOptions"></c-cell-card>
 
-        <c-cell-card :title="t('darkStyle')" :options="darkOptions"></c-cell-card>
+        <c-cell-card :title="t('darkStyle')" align="start" :options="darkOptions"></c-cell-card>
 
         <div>
           <div class="px-2 pb-2 color-text-2 text-xs select-none">{{ t('preview') }}</div>

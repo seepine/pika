@@ -1,5 +1,5 @@
 <template>
-  <div class="c-cell-card">
+  <div class="c-cell-card" :style="styleVars">
     <div v-if="title" class="px-2 color-text-2 text-xs select-none pb-2">{{ title }}</div>
     <n-card content-class="p-0!">
       <np-cell-group bordered :options="options"></np-cell-group>
@@ -9,10 +9,26 @@
 <script setup lang="tsx">
 import type { NpCellGroupOption } from 'naive-plus'
 
-defineProps<{
-  title?: string
-  options: NpCellGroupOption[]
-}>()
+const props = withDefaults(
+  defineProps<{
+    title?: string
+    align?: 'start' | 'center' | 'end'
+    options: NpCellGroupOption[]
+  }>(),
+  {
+    align: 'center',
+  },
+)
+const alignMap = {
+  start: 'flex-start',
+  center: 'center',
+  end: 'flex-end',
+}
+const styleVars = computed(() => {
+  return {
+    '--c-cell-align-items': alignMap[props.align],
+  }
+})
 </script>
 <style lang="scss">
 .c-cell-card {
@@ -29,7 +45,8 @@ defineProps<{
       }
     }
     .np-cell__wrapper {
-      @apply gap-4 items-start;
+      @apply gap-4;
+      align-items: var(--c-cell-align-items);
 
       .np-cell__left {
         @apply min-w-20;

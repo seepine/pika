@@ -1,0 +1,17 @@
+// transition 动画样式
+
+// 用法 <transition name="zoom-out" />
+.zoom-out-enter-active,
+.zoom-out-leave-active {
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease;
+}
+.zoom-out-enter-from {
+  transform: scale(0.5);
+  opacity: 0;
+}
+.zoom-out-leave-to {
+  transform: scale(0.5);
+  opacity: 0;
+}

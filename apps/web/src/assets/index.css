@@ -1,5 +1,6 @@
 @import url('./naive.scss');
 @import url('./theme.scss');
+@import url('./transition.scss');
 
 a {
   text-decoration: none;

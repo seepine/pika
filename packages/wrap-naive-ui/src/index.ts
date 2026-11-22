@@ -25,7 +25,12 @@ export {
   type WAvatarUploadError,
 } from './components/w-avatar-upload/prop'
 export { WIconButtonDefaults, type WIconButtonProps } from './components/w-icon-button/prop'
-export { WPickerDefaults, type WPickerProps } from './components/w-picker/prop'
+export {
+  WPickerDefaults,
+  type WPickerFilter,
+  type WPickerOption,
+  type WPickerProps,
+} from './components/w-picker/prop'
 export { WRadioBlockDefaults, type WRadioBlockProps } from './components/w-radio-block/prop'
 export { WSplitDefaults, type WSplitProps } from './components/w-split/prop'
 export { WUploadDefaults, type WUploadProps } from './components/w-upload/prop'

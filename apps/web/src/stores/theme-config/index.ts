@@ -20,6 +20,7 @@ const sizeConfig: ConfigProviderProps = {
     },
     Input: {
       borderRadius: '6px',
+      paddingSmall: '8px',
     },
     Card: {
       borderRadius: '8px',

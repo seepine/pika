@@ -21,8 +21,16 @@
           <n-text depth="3" class="text-xs mt-4">{{ t('scanTip') }}</n-text>
           <n-input :value="secret" readonly size="small">
             <template #suffix>
-              <np-button text type="primary" :click="() => copy(secret)">
-                {{ t('copy') }}
+              <np-button text :click="() => handleCopy(secret)">
+                <n-icon class="mr-1">
+                  <transition name="zoom-out" mode="out-in">
+                    <span
+                      v-if="copied"
+                      class="i-mdi-check-circle text-green-600 dark:text-green-500"
+                    ></span>
+                    <span v-else class="i-mdi-content-copy"></span>
+                  </transition>
+                </n-icon>
               </np-button>
             </template>
           </n-input>
@@ -79,7 +87,18 @@
           <code v-for="item in codes" :key="item">{{ item }}</code>
         </div>
         <div class="flex flex-row justify-end gap-2">
-          <np-button size="small" :click="copyCodes">{{ t('copyAll') }}</np-button>
+          <np-button size="small" :click="copyCodes">
+            <n-icon class="mr-1">
+              <transition name="zoom-out" mode="out-in">
+                <span
+                  v-if="copied"
+                  class="i-mdi-check-circle text-green-600 dark:text-green-500"
+                ></span>
+                <span v-else class="i-mdi-content-copy"></span>
+              </transition>
+            </n-icon>
+            {{ t('copyAll') }}
+          </np-button>
           <np-button size="small" :click="downloadCodes">{{ t('download') }}</np-button>
         </div>
       </div>
@@ -106,6 +125,7 @@
 import type { NpCellGroupOption } from 'naive-plus'
 import { useI18n } from 'vue-i18n'
 import { formatTime } from '@/utils/date'
+import { useClipboard } from '@vueuse/core'
 
 const { t } = useI18n()
 
@@ -150,11 +170,15 @@ const loadStatus = async () => {
 
 onMounted(loadStatus)
 
-/** 复制文本，成功返回 true */
-const copy = async (text: string): Promise<boolean> => {
+const { copy, copied, isSupported: isCopySupported } = useClipboard()
+
+const handleCopy = async (text: string): Promise<boolean> => {
+  if (!isCopySupported.value) {
+    window.$message.error(t('copyFailed'))
+    return false
+  }
   try {
-    await navigator.clipboard.writeText(text)
-    window.$message.success(t('copied'))
+    await copy(text)
     return true
   } catch {
     window.$message.error(t('copyFailed'))
@@ -165,7 +189,7 @@ const copy = async (text: string): Promise<boolean> => {
 const copyCodes = async () => {
   const batch = codes.value
   // 剪贴板写入是异步的，期间可能已重新生成下一批，需确认仍是同一批再标记已保存
-  if ((await copy(batch.join('\n'))) && codes.value === batch && codesVisible.value) {
+  if ((await handleCopy(batch.join('\n'))) && codes.value === batch && codesVisible.value) {
     codesSaved.value = true
   }
 }
@@ -356,10 +380,8 @@ zh:
   codePlaceholder: 输入 6 位动态码
   codeRequired: 请输入验证码
   next: 下一步
-  copy: 复制
   copyAll: 复制全部
   download: 下载
-  copied: 已复制
   copyFailed: 复制失败，请手动选择复制或下载
   confirm: 确定
   cancel: 取消
@@ -394,10 +416,8 @@ en:
   codePlaceholder: Enter the 6-digit code
   codeRequired: Enter the code
   next: Next
-  copy: Copy
   copyAll: Copy all
   download: Download
-  copied: Copied
   copyFailed: Copy failed, please select and copy manually, or download instead
   confirm: OK
   cancel: Cancel

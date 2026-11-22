@@ -2,7 +2,7 @@ import { treaty } from '@elysia/eden'
 import { type Api, startApp } from '@/app'
 import { afterAll, describe, expect, test } from 'bun:test'
 
-const { app, baseUrl } = await startApp({ port: 48526 })
+const { app, baseUrl } = await startApp()
 const api = treaty<Api>(baseUrl)
 
 afterAll(async () => {

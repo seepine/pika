@@ -85,7 +85,7 @@ export const startApp = async (opts?: { port?: number }) => {
   }
 
   const basePath = config.basePath
-  const port = opts?.port || config.port
+  const port = opts?.port ?? config.port
   await triggerOnStartBefore()
   const app = new Elysia().mount(basePath, api.fetch)
 
@@ -105,6 +105,8 @@ export const startApp = async (opts?: { port?: number }) => {
       await triggerOnShutdown()
     })
   })
+
+  const actualPort = app.server?.port ?? port
   globalThis.__is_hot__ = true
-  return { app, baseUrl: `http://localhost:${port}${basePath}`, basePath, port }
+  return { app, baseUrl: `http://localhost:${actualPort}${basePath}`, basePath, port: actualPort }
 }

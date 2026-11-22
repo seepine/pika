@@ -10,7 +10,7 @@ import { SmsService } from '@/system/services/sms'
 import { hashPassword } from '@/common/utils/crypto'
 
 const phone = '13800000525'
-const email = 'code-login-48525@gmail.com'
+const email = 'code-login@gmail.com'
 const password = 'CodeLogin123456'
 const code = '123456'
 // 限流用例专用账号，避免与其他用例共享失败计数
@@ -18,7 +18,7 @@ const limitedPhone = '13800000625'
 const missingPhone = '13800000725'
 // 注册用例专用账号，避免与登录用例互相干扰
 const registerPhone = '13800000825'
-const registerEmail = 'code-login-48526@gmail.com'
+const registerEmail = 'code-register@gmail.com'
 
 // update 的 auth 是整体配置对象，需先读出再覆盖 regType；走 Service 以同步失效配置缓存
 const setRegType = async (regType: 'email' | 'phone') => {
@@ -32,7 +32,7 @@ describe('登录与 Token', () => {
   let userId!: string
 
   beforeAll(async () => {
-    appHandle = await startApp({ port: 48525 })
+    appHandle = await startApp()
     api = treaty<Api>(appHandle.baseUrl)
 
     const user = await UserRepository.save({
@@ -46,7 +46,7 @@ describe('登录与 Token', () => {
   })
 
   afterAll(async () => {
-    await appHandle.app.stop()
+    if (appHandle) await appHandle.app.stop()
     // 验证码缓存在进程内共享，需清理避免影响其他测试文件
     await Promise.all([
       cache.del(`${SmsService.KEY_PREFIX}${phone}`),

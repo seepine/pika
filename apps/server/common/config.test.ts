@@ -14,6 +14,9 @@ const runConfig = (env: Record<string, string> = {}) =>
     stderr: 'pipe',
   })
 
+// Bun 在 FORCE_COLOR 等环境下会给 console.log 的数字加 ANSI 颜色码，需剥离后再比较
+const ANSI_PATTERN = /\u001B\[[0-9;]*m/g
+
 const readConfigValue = (expression: string, env: Record<string, string> = {}) => {
   const proc = Bun.spawnSync({
     cmd: [
@@ -22,11 +25,11 @@ const readConfigValue = (expression: string, env: Record<string, string> = {}) =
       `const { config } = await import(${JSON.stringify(configPath)}); console.log(${expression})`,
     ],
     cwd: tmpdir(),
-    env: { ...process.env, NODE_ENV: 'production', JWT_SECRET: 'secret', ...env },
+    env: { ...process.env, NODE_ENV: 'production', JWT_SECRET: 'secret', NO_COLOR: '1', ...env },
     stdout: 'pipe',
     stderr: 'pipe',
   })
-  return proc.stdout.toString().trim()
+  return proc.stdout.toString().replace(ANSI_PATTERN, '').trim()
 }
 
 describe('config', () => {
@@ -67,5 +70,21 @@ describe('config', () => {
 
   test('未配置 MULTI_FACTOR_SECRET 时回退到 JWT_SECRET', () => {
     expect(readConfigValue('config.multiFactor.secret', { MULTI_FACTOR_SECRET: '' })).toBe('secret')
+  })
+
+  test('PORT 留空或非法时回退默认端口', () => {
+    expect(readConfigValue('config.port', { PORT: '' })).toBe('9528')
+    expect(readConfigValue('config.port', { PORT: ' ' })).toBe('9528')
+    expect(readConfigValue('config.port', { PORT: 'abc' })).toBe('9528')
+    expect(readConfigValue('config.port', { PORT: '80.5' })).toBe('9528')
+  })
+
+  test('PORT=0 时使用系统分配端口', () => {
+    expect(readConfigValue('config.port', { PORT: '0' })).toBe('0')
+  })
+
+  test('PORT 合法', () => {
+    expect(readConfigValue('config.port', { PORT: '59' })).toBe('59')
+    expect(readConfigValue('config.port', { PORT: '059' })).toBe('59')
   })
 })

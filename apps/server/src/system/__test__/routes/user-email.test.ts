@@ -7,11 +7,11 @@ import { UserRepository } from '@/system/repositories/user'
 import { EmailService } from '@/system/services/email'
 import { hashPassword } from '@/common/utils/crypto'
 
-const boundEmail = 'edit-email-bound-48528@gmail.com'
+const boundEmail = 'edit-email-bound@gmail.com'
 const boundPhone = '13800000528'
 const unboundPhone = '13800000628'
-const newBoundEmail = 'edit-email-bound-new-48528@gmail.com'
-const newUnboundEmail = 'edit-email-unbound-new-48528@gmail.com'
+const newBoundEmail = 'edit-email-bound-new@gmail.com'
+const newUnboundEmail = 'edit-email-unbound-new@gmail.com'
 const password = 'EditEmail123456'
 const code = '123456'
 
@@ -39,7 +39,7 @@ describe('修改邮箱', () => {
     })
 
   beforeAll(async () => {
-    appHandle = await startApp({ port: 48528 })
+    appHandle = await startApp()
     api = treaty<Api>(appHandle.baseUrl)
 
     boundUserId = (
@@ -64,7 +64,7 @@ describe('修改邮箱', () => {
   })
 
   afterAll(async () => {
-    await appHandle.app.stop()
+    if (appHandle) await appHandle.app.stop()
     await Promise.all(
       [boundEmail, newBoundEmail, newUnboundEmail].map((email) =>
         cache.del(`${EmailService.KEY_PREFIX}${email}`),
@@ -78,7 +78,7 @@ describe('修改邮箱', () => {
 
     const { data, status } = await editEmail(accessToken, {
       // 未绑定邮箱时旧邮箱与旧验证码应被忽略
-      oldEmail: 'not-bound-48528@gmail.com',
+      oldEmail: 'not-bound@gmail.com',
       oldCode: '000000',
       newEmail: newUnboundEmail,
       newCode: code,

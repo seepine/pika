@@ -34,16 +34,16 @@ describe('修改密码', () => {
   }
 
   beforeAll(async () => {
-    appHandle = await startApp({ port: 48535 })
+    appHandle = await startApp()
     api = treaty<Api>(appHandle.baseUrl)
   })
 
   afterAll(async () => {
-    await appHandle.app.stop()
+    if (appHandle) await appHandle.app.stop()
   })
 
   describe('未绑定验证方式', () => {
-    const email = 'user-password-48535@gmail.com'
+    const email = 'user-password@gmail.com'
     let userId!: string
     let headers!: { Authorization: string }
     /** 当前生效的密码，随用例推进变化 */
@@ -126,7 +126,7 @@ describe('修改密码', () => {
   })
 
   describe('已绑定验证方式', () => {
-    const email = 'user-password-mfa-48535@gmail.com'
+    const email = 'user-password-mfa@gmail.com'
     let userId!: string
     let headers!: { Authorization: string }
     let secret!: string

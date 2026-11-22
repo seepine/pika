@@ -93,7 +93,7 @@ export const api = new Elysia().use(systemApp).use(demoApp)
   ```
 
 - 测试文件与被测源文件同名；同一源文件有多个场景时追加后缀，如 `routes/user-email.test.ts`。
-- 路由测试通过 `startApp()` 启动完整应用，用 `@elysia/eden` 的 `treaty` 发起请求；每个测试文件使用独立端口，避免并发冲突。
+- 路由测试通过 `startApp()` 启动完整应用，用 `@elysia/eden` 的 `treaty` 发起请求。
 - 测试数据必须自行清理（创建的用户、缓存、配置等），避免污染共享测试数据库。
 
 ## 新增模块步骤

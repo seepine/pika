@@ -52,10 +52,24 @@ const defaultConfig = {
   },
 } as Config
 
+/**
+ * 解析端口，0 表示由系统分配随机端口；留空或非整数视为未配置
+ */
+const parsePort = (raw: string | undefined) => {
+  if (!raw?.trim()) {
+    return undefined
+  }
+  const port = Number(raw)
+  if (Number.isInteger(port) && port >= 0) {
+    return port
+  }
+  return undefined
+}
+
 export const config: Config = {
   mode,
   basePath: '/api',
-  port: Number(env['PORT']) || defaultConfig.port,
+  port: parsePort(env['PORT']) ?? defaultConfig.port,
   logLevel: parseLevel(env['LOG_LEVEL'], LOG_LEVELS, defaultConfig.logLevel),
   logPath: env['LOG_PATH'] || defaultConfig.logPath,
   requestIdleTimeout: Number(env['REQUEST_IDLE_TIMEOUT']) || defaultConfig.requestIdleTimeout,

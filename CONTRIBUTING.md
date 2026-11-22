@@ -22,17 +22,17 @@ bun run dev
 - Server：http://localhost:9528
 - OpenAPI 文档：http://localhost:9528/api/openapi
 
-需要自定义配置时，将 `apps/server/.env.example` 复制为 `apps/server/.env.local` 后修改。
+需要自定义配置时，把 `apps/server/.env.development` 复制为 `apps/server/.env.local` 后修改，更多环境变量见 `apps/server/.env.example`。
 
 ## 提交前检查
 
 ```bash
 bun run lint    # Prettier 格式化
-bun run check   # 类型检查
+bun run check   # 类型检查与格式校验
 bun run test    # 测试
 ```
 
-以上命令需全部通过。CI 会在 Pull Request 上执行同样的检查。
+以上命令需全部通过。CI 会在 Pull Request 上执行类型检查、测试与构建，并校验提交信息。
 
 ## 提交规范
 
@@ -53,7 +53,7 @@ chore: 构建、依赖等杂项
 
 1. 从 `main` 拉出新分支，分支名建议 `feat/xxx`、`fix/xxx`
 2. 保持改动聚焦，一个 PR 只解决一个问题
-3. 在 PR 描述中说明背景、改动点与验证方式
+3. PR 内容遵循 `.github/PULL_REQUEST_TEMPLATE.md` 模板
 4. 涉及行为变更时，补充或更新对应测试
 
 ## 代码约定

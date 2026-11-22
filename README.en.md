@@ -128,11 +128,12 @@ bun run dev
 - Server: http://localhost:9528
 - OpenAPI docs: http://localhost:9528/api/openapi
 
-Local development uses an in-memory database and in-memory cache by default; configure `DATABASE_URL` / `CACHE_URL` to persist data.
+The development config file `apps/server/.env.development` already provides:
 
-Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `apps/server/.env.local` to create an admin account on startup when the database has no users; you can also sign up on the web page — in development the email sign-up verification code is printed to the server log.
+- Admin account `admin@gmail.com` / `asdf1234`
+- In-memory database and cache
 
-See `apps/server/.env.example` for more environment variables.
+To persist data or use another account, copy that file to `apps/server/.env.local` and edit it. See `apps/server/.env.example` for more variables.
 
 ## Common commands
 

@@ -14,17 +14,6 @@ if (!newLayouts['default']) {
   newLayouts['default'] = async () => h(RouterView)
 }
 
-const resetRoute = (route: RouteRecordRaw): RouteRecordRaw[] => {
-  if (typeof route.name === 'string') {
-    // 页面文件名即路由名，末尾的 `/` 表示更深层级需要去掉，但 `/` 本身要保留
-    const path =
-      route.name.endsWith('/') && route.name.length > 1
-        ? route.name.substring(0, route.name.length - 1)
-        : route.name
-    return [{ ...route, path }]
-  }
-  return route.children?.flatMap((child) => resetRoute(child)) ?? []
-}
 const getPathPrefix = (path: string): string => {
   if (!path.includes('/')) {
     return path
@@ -35,6 +24,29 @@ const getPathPrefix = (path: string): string => {
   }
   return arr[0]!
 }
+
+// 拼接父子路由路径，父子两侧是否带 `/` 都能正确处理
+const joinPath = (parent: string, child: string): string => {
+  // 子路径以 `/` 开头代表绝对路径，不继承父路径
+  if (child.startsWith('/')) {
+    return child
+  }
+  const segments = [...parent.split('/'), ...child.split('/')].filter(Boolean)
+  return `/${segments.join('/')}`
+}
+
+// 展开路由，避免 meta 不生效
+const flatRoutes = (routes: readonly RouteRecordRaw[]): RouteRecordRaw[] => {
+  return routes.flatMap((route) => {
+    if (route.name || route.component !== undefined) {
+      return [route]
+    }
+    return (route.children ?? []).map((child) => {
+      return { ...child, path: joinPath(route.path, child.path) }
+    })
+  })
+}
+
 // 过滤掉 meta.hide 为 true 的路由，子路由一并移除
 const filterHiddenRoutes = (routes: readonly RouteRecordRaw[]): RouteRecordRaw[] =>
   routes
@@ -47,11 +59,11 @@ const filterHiddenRoutes = (routes: readonly RouteRecordRaw[]): RouteRecordRaw[]
     })
 
 export const setupLayouts = (routes: readonly RouteRecordRaw[]): readonly RouteRecordRaw[] => {
-  const visibleRoutes = filterHiddenRoutes(routes)
+  const visibleRoutes = filterHiddenRoutes(flatRoutes(routes))
   // 处理路由，例如 pages/[dir]/index.vue，首节点为路径空路由，因此需要拼接
   // `/` 页面单独拎出来挂载，解决 layout 不生效的问题
   const homeRoute = visibleRoutes.find((route) => route.path === '/')
-  const newRoutes = visibleRoutes.flatMap((route) => (route.path === '/' ? [] : resetRoute(route)))
+  const newRoutes = visibleRoutes.filter((route) => route.path !== '/')
 
   const layoutKeys = Object.keys(newLayouts)
   const layoutRoutes: RouteRecordRaw[] = [
@@ -91,6 +103,10 @@ export const setupLayouts = (routes: readonly RouteRecordRaw[]): readonly RouteR
 
   return [
     ...layoutRoutes.filter((item) => (item.children ?? []).length > 0),
-    { path: '/:pathMatch(.*)*', component: () => import('@/pages/404.vue') },
+    {
+      path: '/:pathMatch(.*)*',
+      component: () => import('@/pages/404.vue'),
+      meta: { authRequired: false },
+    },
   ]
 }

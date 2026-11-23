@@ -1,21 +1,45 @@
 {
   "version": "0.2.0",
+  "compounds": [
+    {
+      // 运行并启动 chrome + vite dev
+      "name": "Run with Chrome",
+      "configurations": ["Run", "Launch chrome"],
+      "stopAll": true
+    }
+  ],
   "configurations": [
     {
+      // 运行, 启动前后端并连接 bun server 调试
       "type": "bun",
       "request": "attach",
-      "name": "Debug",
-      // This value can be retrieved by using `bun --inspect`.
+      "name": "Run",
       "url": "ws://localhost:6499/elysia",
       "preLaunchTask": "dev-all",
       "postDebugTask": "bun-dev-stop"
     },
     {
+      // 停止 dev 进程
       "type": "bun",
       "request": "launch",
       "name": "Stop",
       "preLaunchTask": "bun-dev-stop",
       "program": ""
+    },
+    {
+      // VSCode 拉起 Chrome 并连接 Vite dev 调试
+      "type": "chrome",
+      "request": "launch",
+      "name": "Launch chrome",
+      "presentation": { "hidden": true },
+      "url": "http://localhost:9527",
+      "webRoot": "${workspaceFolder}/apps/web",
+      "userDataDir": "${workspaceFolder}/.tmp/chrome-debug",
+      "sourceMapPathOverrides": { "vite:///*": "${webRoot}/*", "/@fs/*": "/*" },
+      "runtimeArgs": ["--auto-open-devtools-for-tabs"],
+      "resolveSourceMapLocations": ["${workspaceFolder}/**", "!**/node_modules/**"],
+      "smartStep": true,
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"]
     }
   ]
 }

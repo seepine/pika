@@ -60,7 +60,6 @@ const value = computed({
     .n-tabs-tab {
       padding: 4px 12px;
       min-width: 40px;
-      font-size: var(--text-size-xs);
       cursor: default;
       color: var(--color-text-2);
       &:hover {
@@ -74,11 +73,17 @@ const value = computed({
       }
     }
 
-    &.n-tabs--large-size {
-      .n-tabs-tab {
-        padding: 4px 16px;
-        font-size: var(--text-size-sm);
-      }
+    &.n-tabs--small-size .n-tabs-tab__label {
+      font-size: 12px;
+      line-height: 14px;
+    }
+
+    &.n-tabs--medium-size .n-tabs-tab__label {
+      line-height: 20px;
+    }
+
+    &.n-tabs--large-size .n-tabs-tab {
+      padding: 4px 16px;
     }
 
     // 组件仅作分段选择器，pane 只承载 tab 文案，故隐藏内容容器

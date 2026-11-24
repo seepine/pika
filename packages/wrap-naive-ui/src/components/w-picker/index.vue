@@ -44,13 +44,11 @@
 
 <script setup lang="ts" generic="K extends string">
 import { NDropdown, type DropdownOption } from 'naive-ui'
-import { computed, inject, isVNode, type VNode } from 'vue'
-import { wConfigProviderInjectionKey } from '../../config-provider'
+import { computed, isVNode, type VNode } from 'vue'
+import { useMergedProps } from '../../use-merged-props'
 import { WPickerDefaults, type WPickerOption, type WPickerProps } from './prop'
 
-// 保留 defaultProps 为 undefined 状态，让 w-config-provider.componentOptions.Picker
-// 能在 prop 未传时介入（优先级：prop > provider > defaults）
-// Boolean 类型 prop 必须显式声明 default 为 undefined，否则未传时会被 Vue 置为 false 并覆盖 defaults/provider
+// Boolean 类型 prop 显式声明 undefined，否则未传时会被 Vue 置为 false，覆盖 provider
 const defaultProps = withDefaults(defineProps<WPickerProps<K>>(), {
   disabled: undefined,
   showArrow: undefined,
@@ -62,14 +60,7 @@ const emit = defineEmits<{
 
 const modelValue = defineModel<K>('value')
 
-const injected = inject(wConfigProviderInjectionKey, undefined)
-const merged = computed<WPickerProps<K>>(() => {
-  const o = injected?.value?.Picker
-  const userProps = Object.fromEntries(
-    Object.entries(defaultProps).filter(([, v]) => v !== undefined),
-  ) as Partial<WPickerProps<K>>
-  return Object.assign({}, WPickerDefaults, o, userProps) as WPickerProps<K>
-})
+const merged = useMergedProps<WPickerProps<K>>('Picker', WPickerDefaults, defaultProps)
 
 /** 递归查找选项：支持分组（type: 'group' 的 children）内的子项 */
 const findOption = (

@@ -12,13 +12,14 @@
 <script setup lang="ts">
 import { NUpload, type UploadFileInfo } from 'naive-ui'
 import type { CustomRequest } from 'naive-ui/es/upload/src/interface'
-import { computed, inject, ref } from 'vue'
-import { wConfigProviderInjectionKey } from '../../config-provider'
+import { ref } from 'vue'
+import { useMergedProps } from '../../use-merged-props'
 import { WUploadDefaults, type WUploadProps } from './prop'
 
-// 保留 defaultProps 为 undefined 状态，让 w-config-provider.componentOptions.Upload
-// 能在 prop 未传时介入（优先级：prop > provider > defaults）
-const defaultProps = defineProps<WUploadProps>()
+// Boolean 类型 prop 显式声明 undefined，否则未传时会被 Vue 置为 false，覆盖 provider
+const defaultProps = withDefaults(defineProps<WUploadProps>(), {
+  showFileList: undefined,
+})
 
 const emit = defineEmits<{
   /** 上传前校验，返回 `false` 阻止上传 */
@@ -34,14 +35,7 @@ const emit = defineEmits<{
 
 const uploading = ref(false)
 
-const injected = inject(wConfigProviderInjectionKey, undefined)
-const merged = computed<WUploadProps>(() => {
-  const o = injected?.value?.Upload
-  const userProps = Object.fromEntries(
-    Object.entries(defaultProps).filter(([_, v]) => v !== undefined),
-  ) as Partial<WUploadProps>
-  return Object.assign({}, WUploadDefaults, o, userProps)
-})
+const merged = useMergedProps<WUploadProps>('Upload', WUploadDefaults, defaultProps)
 
 const handleBeforeUpload = (data: { file: UploadFileInfo }) => {
   const fn = merged.value.beforeUpload

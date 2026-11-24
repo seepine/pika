@@ -18,25 +18,20 @@
 
 <script setup lang="ts">
 import { NButton } from 'naive-ui'
-import { computed, inject } from 'vue'
-import { wConfigProviderInjectionKey } from '../../config-provider'
+import { computed } from 'vue'
+import { useMergedProps } from '../../use-merged-props'
 import { WIconButtonDefaults, type WIconButtonProps } from './prop'
 
-// defaultProps 保留 undefined，让 w-config-provider 能在 prop 未传时介入（prop > provider > defaults）
-const defaultProps = defineProps<WIconButtonProps>()
+// Boolean 类型 prop 显式声明 undefined，否则未传时会被 Vue 置为 false，覆盖 provider
+const defaultProps = withDefaults(defineProps<WIconButtonProps>(), {
+  disabled: undefined,
+})
 
 const emit = defineEmits<{
   (e: 'click', event: MouseEvent): void
 }>()
 
-const injected = inject(wConfigProviderInjectionKey, undefined)
-const merged = computed<WIconButtonProps>(() => {
-  const o = injected?.value?.IconButton
-  const userProps = Object.fromEntries(
-    Object.entries(defaultProps).filter(([_, v]) => v !== undefined),
-  ) as Partial<WIconButtonProps>
-  return Object.assign({}, WIconButtonDefaults, o, userProps)
-})
+const merged = useMergedProps<WIconButtonProps>('IconButton', WIconButtonDefaults, defaultProps)
 
 // 按 size / iconSize 派生 CSS 变量
 const compStyle = computed(() => {

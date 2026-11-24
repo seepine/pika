@@ -20,22 +20,16 @@
 
 <script setup lang="ts" generic="K extends string">
 import { NTabs, NTabPane } from 'naive-ui'
-import { computed, inject } from 'vue'
-import { wConfigProviderInjectionKey } from '../../config-provider'
+import { computed } from 'vue'
+import { useMergedProps } from '../../use-merged-props'
 import { WRadioBlockDefaults, type WRadioBlockProps } from './prop'
 
-// 保留 defaultProps 为 undefined 状态，让 w-config-provider.componentOptions.RadioBlock
-// 能在 prop 未传时介入（优先级：prop > provider > defaults）
-const defaultProps = defineProps<WRadioBlockProps<K>>()
-
-const injected = inject(wConfigProviderInjectionKey, undefined)
-const merged = computed<WRadioBlockProps<K>>(() => {
-  const o = injected?.value?.RadioBlock
-  const userProps = Object.fromEntries(
-    Object.entries(defaultProps).filter(([_, v]) => v !== undefined),
-  ) as Partial<WRadioBlockProps<K>>
-  return Object.assign({}, WRadioBlockDefaults, o, userProps) as WRadioBlockProps<K>
+// Boolean 类型 prop 显式声明 undefined，否则未传时会被 Vue 置为 false，覆盖 provider
+const defaultProps = withDefaults(defineProps<WRadioBlockProps<K>>(), {
+  disabled: undefined,
 })
+
+const merged = useMergedProps<WRadioBlockProps<K>>('RadioBlock', WRadioBlockDefaults, defaultProps)
 
 // disabled 时屏蔽 n-tabs 的 v-model 更新，使外层无法通过点击/键盘切换
 const modelValue = defineModel<K>()

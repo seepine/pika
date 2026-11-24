@@ -8,6 +8,7 @@ import type { NpCellGroupOption } from 'naive-plus'
 import { useI18n } from 'vue-i18n'
 import { i18nTitle } from '@/utils/i18n-title'
 import type { LanguageMode } from '@/stores/preference'
+import { WPickerVirtual } from '@pika/wrap-naive-ui'
 
 definePage({
   meta: {
@@ -49,7 +50,7 @@ const options = computed<NpCellGroupOption[]>(() => [
   {
     label: t('timezone'),
     value: () => (
-      <WPicker
+      <WPickerVirtual
         placeholder={t('timezone')}
         options={timeZoneOptions.value}
         value={preferenceStore.timezone}

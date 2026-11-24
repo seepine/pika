@@ -14,8 +14,10 @@
 
 ```ini
 src/
-  index.ts                                 # 统一导出入口
+  index.ts                                # 统一导出入口
   config-provider.ts                      # WComponentOptions 类型 + 注入 key
+  use-merged-props.ts                     # props 合并 hook（prop > provider > defaults）
+  resolver.ts                             # unplugin-vue-components 组件解析器
   components/
     w-config-provider/index.vue           # 全局组件默认配置
     w-avatar/index.vue                    # 头像（封装 n-avatar）

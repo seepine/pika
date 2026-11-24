@@ -15,6 +15,7 @@ export interface WAvatarUploadProps
 
 export const WAvatarUploadDefaults = {
   accept: 'image/*',
+  round: true,
   maxSize: 5 * 1024 * 1024,
 } as const satisfies Partial<WAvatarUploadProps>
 

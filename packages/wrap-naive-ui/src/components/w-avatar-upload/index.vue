@@ -20,7 +20,8 @@
         :text-max-chars="merged.textMaxChars"
         :text-case="merged.textCase"
         :base-url="merged.baseUrl"
-        round
+        :round="merged.round"
+        :lazy="merged.lazy"
       />
       <div
         class="absolute inset-0 flex items-center justify-center bg-black/50 transition-opacity"
@@ -36,14 +37,16 @@
 
 <script setup lang="ts">
 import { NIcon, type UploadFileInfo } from 'naive-ui'
-import { computed, inject } from 'vue'
+import { computed } from 'vue'
 import { WAvatar, WUpload } from '../../index.ts'
-import { wConfigProviderInjectionKey } from '../../config-provider'
+import { useMergedProps } from '../../use-merged-props'
 import { WAvatarUploadDefaults, type WAvatarUploadError, type WAvatarUploadProps } from './prop'
 
-// 保留 defaultProps 为 undefined 状态，让 w-config-provider.componentOptions.AvatarUpload
-// 能在 prop 未传时介入（优先级：prop > provider > defaults）
-const defaultProps = defineProps<WAvatarUploadProps>()
+// Boolean 类型 prop 显式声明 undefined，否则未传时会被 Vue 置为 false，覆盖 provider
+const defaultProps = withDefaults(defineProps<WAvatarUploadProps>(), {
+  round: undefined,
+  lazy: undefined,
+})
 
 const emit = defineEmits<{
   /** 默认校验（类型/大小）失败或用户 `beforeUpload` 返回 `false` 时触发；文案由调用方翻译 */
@@ -52,14 +55,11 @@ const emit = defineEmits<{
   (e: 'uploaded', url: string): void
 }>()
 
-const injected = inject(wConfigProviderInjectionKey, undefined)
-const merged = computed<WAvatarUploadProps>(() => {
-  const o = injected?.value?.AvatarUpload
-  const userProps = Object.fromEntries(
-    Object.entries(defaultProps).filter(([_, v]) => v !== undefined),
-  ) as Partial<WAvatarUploadProps>
-  return Object.assign({}, WAvatarUploadDefaults, o, userProps)
-})
+const merged = useMergedProps<WAvatarUploadProps>(
+  'AvatarUpload',
+  WAvatarUploadDefaults,
+  defaultProps,
+)
 
 // 把 size 字符串转成像素，用于外层触发器容器尺寸
 const sizePx = computed(() => {

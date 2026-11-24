@@ -43,22 +43,16 @@
 
 <script setup lang="ts">
 import { NSplit } from 'naive-ui'
-import { computed, inject, onBeforeUnmount, ref, watch } from 'vue'
-import { wConfigProviderInjectionKey } from '../../config-provider'
+import { onBeforeUnmount, ref, watch } from 'vue'
+import { useMergedProps } from '../../use-merged-props'
 import { WSplitDefaults, type WSplitProps } from './prop'
 
-// 保留 defaultProps 为 undefined 状态，让 w-config-provider.componentOptions.Split
-// 能在 prop 未传时介入（优先级：prop > provider > defaults）
-const defaultProps = defineProps<WSplitProps>()
-
-const injected = inject(wConfigProviderInjectionKey, undefined)
-const merged = computed<WSplitProps>(() => {
-  const o = injected?.value?.Split
-  const userProps = Object.fromEntries(
-    Object.entries(defaultProps).filter(([_, v]) => v !== undefined),
-  ) as Partial<WSplitProps>
-  return Object.assign({}, WSplitDefaults, o, userProps)
+// Boolean 类型 prop 显式声明 undefined，否则未传时会被 Vue 置为 false，覆盖 provider
+const defaultProps = withDefaults(defineProps<WSplitProps>(), {
+  disabled: undefined,
 })
+
+const merged = useMergedProps<WSplitProps>('Split', WSplitDefaults, defaultProps)
 
 const isDragging = ref(false)
 const collapsed = defineModel('collapsed', { default: false })

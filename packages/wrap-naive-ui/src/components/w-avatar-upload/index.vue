@@ -8,7 +8,8 @@
     @uploaded="(url) => emit('uploaded', url)"
   >
     <div
-      class="relative cursor-pointer rounded-full overflow-hidden"
+      class="relative cursor-pointer overflow-hidden"
+      :class="merged.round ? 'rounded-full' : 'rounded-[3px]'"
       :style="{ width: `${sizePx}px`, height: `${sizePx}px` }"
     >
       <w-avatar
@@ -20,7 +21,8 @@
         :text-max-chars="merged.textMaxChars"
         :text-case="merged.textCase"
         :base-url="merged.baseUrl"
-        round
+        :round="merged.round"
+        :lazy="merged.lazy"
       />
       <div
         class="absolute inset-0 flex items-center justify-center bg-black/50 transition-opacity"
@@ -36,14 +38,16 @@
 
 <script setup lang="ts">
 import { NIcon, type UploadFileInfo } from 'naive-ui'
-import { computed, inject } from 'vue'
+import { computed } from 'vue'
 import { WAvatar, WUpload } from '../../index.ts'
-import { wConfigProviderInjectionKey } from '../../config-provider'
+import { useMergedProps } from '../../use-merged-props'
 import { WAvatarUploadDefaults, type WAvatarUploadError, type WAvatarUploadProps } from './prop'
 
-// 保留 defaultProps 为 undefined 状态，让 w-config-provider.componentOptions.AvatarUpload
-// 能在 prop 未传时介入（优先级：prop > provider > defaults）
-const defaultProps = defineProps<WAvatarUploadProps>()
+// Boolean 类型 prop 显式声明 undefined，否则未传时会被 Vue 置为 false，覆盖 provider
+const defaultProps = withDefaults(defineProps<WAvatarUploadProps>(), {
+  round: undefined,
+  lazy: undefined,
+})
 
 const emit = defineEmits<{
   /** 默认校验（类型/大小）失败或用户 `beforeUpload` 返回 `false` 时触发；文案由调用方翻译 */
@@ -52,25 +56,28 @@ const emit = defineEmits<{
   (e: 'uploaded', url: string): void
 }>()
 
-const injected = inject(wConfigProviderInjectionKey, undefined)
-const merged = computed<WAvatarUploadProps>(() => {
-  const o = injected?.value?.AvatarUpload
-  const userProps = Object.fromEntries(
-    Object.entries(defaultProps).filter(([_, v]) => v !== undefined),
-  ) as Partial<WAvatarUploadProps>
-  return Object.assign({}, WAvatarUploadDefaults, o, userProps)
-})
+const merged = useMergedProps<WAvatarUploadProps>(
+  'AvatarUpload',
+  WAvatarUploadDefaults,
+  defaultProps,
+)
 
-// 把 size 字符串转成像素，用于外层触发器容器尺寸
+// 外层触发器容器尺寸，需把 size 预设转成像素
 const sizePx = computed(() => {
   const s = merged.value.size
-  if (typeof s === 'number') return s
-  if (s === 'small') return 32
-  if (s === 'medium') return 48
+  if (typeof s === 'number') {
+    return s
+  }
+  if (s === 'small') {
+    return 32
+  }
+  if (s === 'medium') {
+    return 48
+  }
   return 64
 })
 
-// 默认校验：图片类型 + 大小；通过后再执行用户自定义校验
+// 默认校验图片类型与大小，通过后再执行用户自定义校验
 const handleBeforeUpload = (data: { file: UploadFileInfo }) => {
   const rawFile = data.file.file
   if (!rawFile || !rawFile.type.startsWith('image/')) {
@@ -83,7 +90,9 @@ const handleBeforeUpload = (data: { file: UploadFileInfo }) => {
     return false
   }
   const fn = merged.value.beforeUpload
-  if (fn && fn(data) === false) return false
+  if (fn && fn(data) === false) {
+    return false
+  }
   return true
 }
 </script>

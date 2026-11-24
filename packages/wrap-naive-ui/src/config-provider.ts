@@ -3,6 +3,7 @@ import type { WAvatarProps } from './components/w-avatar/prop'
 import type { WAvatarUploadProps } from './components/w-avatar-upload/prop'
 import type { WIconButtonProps } from './components/w-icon-button/prop'
 import type { WPickerProps } from './components/w-picker/prop'
+import type { WPickerVirtualProps } from './components/w-picker-virtual/prop'
 import type { WRadioBlockProps } from './components/w-radio-block/prop'
 import type { WSplitProps } from './components/w-split/prop'
 import type { WUploadProps } from './components/w-upload/prop'
@@ -16,6 +17,7 @@ export interface WComponentOptions {
   AvatarUpload?: Partial<WAvatarUploadProps>
   IconButton?: Partial<WIconButtonProps>
   Picker?: Partial<WPickerProps>
+  PickerVirtual?: Partial<WPickerVirtualProps>
   RadioBlock?: Partial<WRadioBlockProps>
   Split?: Partial<WSplitProps>
   Upload?: Partial<WUploadProps>

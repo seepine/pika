@@ -17,6 +17,7 @@ const sizeConfig: ConfigProviderProps = {
       borderRadiusSmall: '6px',
       fontSizeSmall: '13px',
       fontSizeTiny: '12px',
+      iconSizeSmall: '16px',
     },
     Input: {
       borderRadius: '6px',
@@ -25,6 +26,20 @@ const sizeConfig: ConfigProviderProps = {
     Card: {
       borderRadius: '8px',
       paddingMedium: '16px',
+    },
+    Dialog: {
+      padding: '16px 20px 20px 20px',
+      closeMargin: '16px 16px 0 0',
+    },
+    Modal: {
+      peers: {
+        Card: {
+          titleFontSizeMedium: '16px',
+        },
+        Dialog: {
+          titleFontSize: '16px',
+        },
+      },
     },
     Dropdown: {
       borderRadius: '6px',
@@ -78,11 +93,33 @@ export const useThemeConfigStore = defineStore('theme-config', () => {
             borderHover: 'rgba(0,0,0,0)',
             colorHover: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(46,51,56,0.09)',
           },
+          InternalSelectMenu: {
+            color: 'var(--color-bg-3)',
+          },
+          TreeSelect: {
+            menuColor: 'var(--color-bg-2)',
+          },
+          Popover: {
+            color: 'var(--color-bg-3)',
+          },
           Dropdown: {
             color: isDark ? 'var(--color-bg-3)' : undefined,
           },
+          Form: {
+            labelTextColor: 'var(--color-text-2)',
+          },
           Switch: {
             boxShadowFocus: 'unset',
+          },
+          Modal: {
+            peers: {
+              Card: {
+                colorModal: 'var(--color-bg-2)',
+              },
+              Dialog: {
+                color: 'var(--color-bg-2)',
+              },
+            },
           },
         },
       } as ConfigProviderProps,

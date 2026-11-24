@@ -21,7 +21,8 @@ src/
     w-avatar/index.vue                    # 头像（封装 n-avatar）
     w-avatar-upload/index.vue             # 头像上传（w-avatar + w-upload）
     w-icon-button/index.vue               # 图标按钮（封装 n-button）
-    w-picker/index.vue                    # chip 下拉选择器（n-popover + 虚拟列表）
+    w-picker/index.vue                    # chip 下拉选择器（封装 n-dropdown）
+    w-picker-virtual/index.vue            # chip 下拉选择器（n-popover + 虚拟列表 + 筛选）
     w-radio-block/index.vue               # 分段单选块（封装 n-tabs）
     w-split/index.vue                     # 分割面板（封装 n-split）
     w-upload/index.vue                    # 文件上传（封装 n-upload）

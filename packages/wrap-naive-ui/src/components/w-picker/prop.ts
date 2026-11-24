@@ -1,10 +1,9 @@
 import type { DropdownOption, DropdownProps } from 'naive-ui'
-import type { VNode } from 'vue'
+import type { VNode, VNodeChild } from 'vue'
 
 /**
- * 下拉选项。naive-ui 的 `key` 为可选，而本组件依赖 key 做值与 label 匹配，
- * 因此收窄为必填。
- * 不把 key 约束到泛型 `K`，避免调用方 computed 数组字面量的 key 被放宽为 `string` 时产生类型冲突
+ * 下拉选项。naive-ui 的 `key` 为可选，而本组件依赖 key 匹配值与 label，故收窄为必填。
+ * 不约束到泛型 `K`，避免调用方数组字面量的 key 被放宽为 `string` 时类型冲突
  */
 export type WPickerOption = DropdownOption & { key: string }
 
@@ -25,7 +24,7 @@ export interface WPickerProps<K extends string = string> {
    * 自定义展示区
    * @returns 返回字符串或 VNode 会作为 trigger 区渲染，返回 `undefined` 表示未选中，将展示 placeholder
    */
-  format?: (key: K, option: WPickerOption) => string | VNode | (() => VNode) | undefined
+  format?: (key: K, option: WPickerOption) => string | VNode | (() => VNodeChild) | undefined
 }
 
 export const WPickerDefaults = {

@@ -8,7 +8,8 @@
     @uploaded="(url) => emit('uploaded', url)"
   >
     <div
-      class="relative cursor-pointer rounded-full overflow-hidden"
+      class="relative cursor-pointer overflow-hidden"
+      :class="merged.round ? 'rounded-full' : 'rounded-[3px]'"
       :style="{ width: `${sizePx}px`, height: `${sizePx}px` }"
     >
       <w-avatar
@@ -61,16 +62,22 @@ const merged = useMergedProps<WAvatarUploadProps>(
   defaultProps,
 )
 
-// 把 size 字符串转成像素，用于外层触发器容器尺寸
+// 外层触发器容器尺寸，需把 size 预设转成像素
 const sizePx = computed(() => {
   const s = merged.value.size
-  if (typeof s === 'number') return s
-  if (s === 'small') return 32
-  if (s === 'medium') return 48
+  if (typeof s === 'number') {
+    return s
+  }
+  if (s === 'small') {
+    return 32
+  }
+  if (s === 'medium') {
+    return 48
+  }
   return 64
 })
 
-// 默认校验：图片类型 + 大小；通过后再执行用户自定义校验
+// 默认校验图片类型与大小，通过后再执行用户自定义校验
 const handleBeforeUpload = (data: { file: UploadFileInfo }) => {
   const rawFile = data.file.file
   if (!rawFile || !rawFile.type.startsWith('image/')) {
@@ -83,7 +90,9 @@ const handleBeforeUpload = (data: { file: UploadFileInfo }) => {
     return false
   }
   const fn = merged.value.beforeUpload
-  if (fn && fn(data) === false) return false
+  if (fn && fn(data) === false) {
+    return false
+  }
   return true
 }
 </script>

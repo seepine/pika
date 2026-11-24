@@ -25,7 +25,7 @@
         {{ merged.placeholder }}
       </span>
       <slot name="default" v-else>
-        <component v-if="typeof labelOf === 'function'" :is="labelOf()"></component>
+        <component v-if="typeof labelOf === 'function'" :is="labelOf"></component>
         <span v-else>
           {{ labelOf }}
         </span>
@@ -43,8 +43,8 @@
 </template>
 
 <script setup lang="ts" generic="K extends string">
-import { NDropdown, type DropdownOption } from 'naive-ui'
-import { computed, isVNode, type VNode } from 'vue'
+import { NDropdown } from 'naive-ui'
+import { computed, isVNode, type VNodeChild } from 'vue'
 import { useMergedProps } from '../../use-merged-props'
 import { WPickerDefaults, type WPickerOption, type WPickerProps } from './prop'
 
@@ -62,38 +62,39 @@ const modelValue = defineModel<K>('value')
 
 const merged = useMergedProps<WPickerProps<K>>('Picker', WPickerDefaults, defaultProps)
 
-/** 递归查找选项：支持分组（type: 'group' 的 children）内的子项 */
+/** 递归查找选项，分组与子菜单都通过 children 嵌套 */
 const findOption = (
   key: K,
-  items: DropdownOption[] = merged.value.options,
+  items: WPickerOption[] = merged.value.options,
 ): WPickerOption | undefined => {
   for (const item of items) {
     if (item.key === key) {
-      // 命中 key 的选项必然携带该 key
-      return item as WPickerOption
+      return item
     }
-    if (item.type === 'group' && item.children) {
-      const found = findOption(key, item.children)
-      if (found) {
-        return found
-      }
+    const children = (item as { children?: WPickerOption[] }).children
+    if (!children) {
+      continue
+    }
+    const found = findOption(key, children)
+    if (found) {
+      return found
     }
   }
   return undefined
 }
 
 /** 当前值对应的 label，无匹配（或选项无 label）时回退显示 placeholder */
-const labelOf = computed<string | (() => VNode) | undefined>(() => {
+const labelOf = computed<string | (() => VNodeChild) | undefined>(() => {
   const key = modelValue.value
-  if (!key) {
+  if (key === undefined) {
     return undefined
   }
   const option = findOption(key)
-  if (!option) {
+  if (option === undefined) {
     return undefined
   }
   const fmt = merged.value.format
-  if (fmt !== undefined) {
+  if (fmt) {
     const res = fmt(key, option)
     if (isVNode(res)) {
       return () => {
@@ -102,7 +103,8 @@ const labelOf = computed<string | (() => VNode) | undefined>(() => {
     }
     return res
   }
-  return option.label as string | (() => VNode) | undefined
+  // MenuOption 带 `[key: string]: unknown` 索引签名，label 需显式收窄
+  return option.label as string | (() => VNodeChild) | undefined
 })
 
 /** 选中选项：值变化时回写 v-model 并触发 change */

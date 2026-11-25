@@ -91,7 +91,7 @@ const menus = computed<{ title: string; options: NpCellGroupOption[] }[]>(() => 
 
   :deep(.setting-menu__icon) {
     @apply flex items-center justify-center w-7 h-7 rounded-lg;
-    @apply bg-[var(--color-bg-3)] color-text-2 text-size-lg;
+    @apply bg-[var(--color-bg-3)] color-text-1 text-size-lg;
   }
 }
 </style>

@@ -1,8 +1,8 @@
 import type { ButtonProps } from 'naive-ui'
 
 export interface WIconButtonProps {
-  /** 尺寸：`tiny`/`medium`/`large` 透传给 n-button，`number` 仅覆盖 `--n-height`（像素），字号沿用默认尺寸 */
-  size?: 'tiny' | 'medium' | 'large' | number
+  /** 尺寸：`tiny`/`small`/`medium`/`large` 透传给 n-button，`number` 仅覆盖 `--n-height`（像素），字号沿用默认尺寸 */
+  size?: ButtonProps['size'] | number
   /** 覆盖 `--n-icon-size` CSS 变量 */
   iconSize?: number
   /** 边框圆角 */

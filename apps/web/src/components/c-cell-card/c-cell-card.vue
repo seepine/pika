@@ -1,6 +1,8 @@
 <template>
   <div class="c-cell-card" :style="styleVars">
-    <div v-if="title" class="px-2 color-text-2 text-xs select-none pb-2">{{ title }}</div>
+    <div v-if="title || $slots.title" class="px-2 color-text-2 text-xs select-none pb-2">
+      <slot name="title">{{ title }}</slot>
+    </div>
     <n-card content-class="p-0!">
       <np-cell-group bordered :options="options"></np-cell-group>
     </n-card>
@@ -13,12 +15,17 @@ const props = withDefaults(
   defineProps<{
     title?: string
     align?: 'start' | 'center' | 'end'
+    /** 图标容器尺寸，数字按 px 处理；仅控制外框，内联 svg 需自行指定尺寸 */
+    iconSize?: number | string
     options: NpCellGroupOption[]
   }>(),
   {
     align: 'center',
+    iconSize: 24,
   },
 )
+/** 数字统一转成 px，字符串原样透传（如 1.5rem、2em） */
+const toCssSize = (size: number | string) => (typeof size === 'number' ? `${size}px` : size)
 const alignMap = {
   start: 'flex-start',
   center: 'center',
@@ -27,6 +34,7 @@ const alignMap = {
 const styleVars = computed(() => {
   return {
     '--c-cell-align-items': alignMap[props.align],
+    '--c-cell-icon-size': toCssSize(props.iconSize),
   }
 })
 </script>
@@ -41,7 +49,8 @@ const styleVars = computed(() => {
 
     .np-cell__icon {
       .n-icon {
-        @apply w-6 h-6;
+        width: var(--c-cell-icon-size);
+        height: var(--c-cell-icon-size);
       }
     }
     .np-cell__wrapper {

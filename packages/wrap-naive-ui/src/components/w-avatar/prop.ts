@@ -1,7 +1,7 @@
 import type { AvatarProps } from 'naive-ui'
 
 export interface WAvatarProps {
-  /** 图片地址。绝对 URL 走 `/api/file/avatar` 代理，相对路径直接拼接 baseUrl */
+  /** 图片地址。绝对 URL 直接使用，相对路径拼接 baseUrl */
   src?: string
   size?: AvatarProps['size']
   fontSize?: number
@@ -12,7 +12,7 @@ export interface WAvatarProps {
   text?: string
   textMaxChars?: number
   textCase?: 'upper' | 'lower' | 'default'
-  /** 前缀地址。绝对 URL 时拼接为 `/api/file/avatar?url=...`，相对路径时直接拼接 */
+  /** 前缀地址。用于相对路径拼接 */
   baseUrl?: string
 }
 

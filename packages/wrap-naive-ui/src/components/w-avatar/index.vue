@@ -50,10 +50,9 @@ const merged = useMergedProps<WAvatarProps>('Avatar', WAvatarDefaults, defaultPr
 const url = computed<string | undefined>(() => {
   const src = merged.value.src
   if (!src) return undefined
+  // 绝对 URL 直接使用，相对路径拼接 baseUrl 前缀
+  if (/^https?:\/\//i.test(src)) return src
   const base = merged.value.baseUrl
-  if (/^https?:\/\//i.test(src)) {
-    return base ? `${base}/api/file/avatar?url=${encodeURIComponent(src)}` : src
-  }
   return base ? `${base}${src}` : src
 })
 

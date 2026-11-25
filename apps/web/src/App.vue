@@ -12,7 +12,7 @@
         <n-modal-provider>
           <n-dialog-provider>
             <np-config-provider :locale="locale" :component-options="npComponentOptions">
-              <w-config-provider :component-options="componentOptions">
+              <w-config-provider :component-options="wrapUiComponentOptions">
                 <router-view></router-view>
               </w-config-provider>
             </np-config-provider>
@@ -32,7 +32,7 @@ import type { NpComponentOptions } from 'naive-plus'
 useUpdateListener()
 
 // 注入 w-upload / w-avatar-upload 的全局默认 customRequest
-const componentOptions = computed<WComponentOptions>(() => ({
+const wrapUiComponentOptions = computed<WComponentOptions>(() => ({
   Upload: { customRequest: useGlobalUpload() },
 }))
 

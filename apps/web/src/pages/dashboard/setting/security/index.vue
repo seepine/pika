@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col gap-4">
-    <c-cell-card :title="t('account')" :options="options"></c-cell-card>
+    <c-cell-card :title="t('account')" :icon-size="24" :options="options"></c-cell-card>
     <multi-factor-card></multi-factor-card>
   </div>
 </template>
